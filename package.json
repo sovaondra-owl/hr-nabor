@@ -11,6 +11,7 @@
     "deploy:edge": "npx supabase functions deploy analyze-screenshot --no-verify-jwt --project-ref axbjmxuolptpldtlxzio"
   },
   "dependencies": {
+    "dotenv": "^16.6.1",
     "xlsx": "^0.18.5"
   }
 }

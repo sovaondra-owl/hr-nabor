@@ -603,7 +603,7 @@
               <span class="text-[11px] text-slate-400">Kandidátů: ${candidateCount}</span>
             </div>
           </div>
-          ${o.description ? `<p class="text-sm text-slate-600 line-clamp-3">${escapeHtml(o.description)}</p>` : ''}
+          ${o.description ? `<p class="text-sm text-slate-600 line-clamp-3">${escapeHtml(stripHtml(o.description))}</p>` : ''}
           <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-50 mt-auto">
             <button type="button" class="${TW.btn} ${TW.btnSmall} ${TW.btnPrimary} btn-opening-candidates" data-id="${o.id}">Kandidáti</button>
             <button type="button" class="${TW.btn} ${TW.btnSmall} ${TW.btnSecondary} btn-edit-opening" data-id="${o.id}">Upravit</button>
@@ -2696,6 +2696,12 @@
   function escapeHtml(s) {
     if (s == null) return '';
     const div = document.createElement('div'); div.textContent = s; return div.innerHTML;
+  }
+  function stripHtml(html) {
+    if (!html || typeof html !== 'string') return '';
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return (div.textContent || div.innerText || '').trim();
   }
 
   // --- Screenshot import ---

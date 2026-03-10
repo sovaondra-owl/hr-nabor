@@ -1,7 +1,9 @@
 /**
  * Jednoduchý statický server – spuštění aplikace na localhost.
  * Použití: node serve.js   → http://localhost:3000
+ * Konfigurace Supabase z .env (config.js se generuje ze serveru).
  */
+require('dotenv').config();
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -21,6 +23,17 @@ const MIMES = {
 
 const server = http.createServer((req, res) => {
   const urlPath = req.url.split('?')[0] || '/';
+  // config.js ze serveru – klíče z .env, ne z repozitáře
+  if (urlPath === '/config.js') {
+    const body = [
+      'window.API_BASE = window.API_BASE || ' + JSON.stringify(process.env.API_BASE || 'http://localhost:3001') + ';',
+      'window.SUPABASE_URL = window.SUPABASE_URL || ' + JSON.stringify(process.env.SUPABASE_URL || '') + ';',
+      'window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || ' + JSON.stringify(process.env.SUPABASE_ANON_KEY || '') + ';'
+    ].join('\n');
+    res.writeHead(200, { 'Content-Type': 'application/javascript' });
+    res.end(body);
+    return;
+  }
   let file = urlPath === '/' ? '/index.html' : urlPath;
   file = path.join(__dirname, path.normalize(file).replace(/^(\.\.(\/|\\|$))+/, ''));
   const ext = path.extname(file);

@@ -121,7 +121,7 @@
       <div class="job-card bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-cyan-100 transition-all" data-opening-id="${o.id}" data-position-id="${o.positionId || ''}" data-name="${escapeAttr(name)}">
         <h3 class="text-lg font-bold text-blue-950 mb-1">${escapeHtml(name)}</h3>
         <p class="text-sm text-slate-500 mb-3">${escapeHtml(pos ? pos.name : '')}${location ? ' · ' + escapeHtml(location) : ''}</p>
-        ${o.description ? `<p class="text-sm text-slate-600 mb-4 line-clamp-2">${escapeHtml(o.description)}</p>` : ''}
+        ${o.description ? `<p class="text-sm text-slate-600 mb-4 line-clamp-2">${escapeHtml(stripHtml(o.description))}</p>` : ''}
         <button type="button" class="btn-apply-job px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-700 text-white font-semibold rounded-xl shadow-[0_4px_14px_0_rgba(6,182,212,0.3)] transition-all">Přihlásit se</button>
       </div>
     `;
@@ -249,6 +249,12 @@
     div.textContent = s;
     return div.innerHTML;
   }
+  function stripHtml(html) {
+    if (!html || typeof html !== 'string') return '';
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return (div.textContent || div.innerText || '').trim();
+  }
   function escapeAttr(s) {
     if (s == null) return '';
     return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -329,7 +335,7 @@
       await saveApplication(application);
       applySection.hidden = true;
       detailSection.hidden = true;
-      positionsSection.hidden = false;
+      positionsSection.hidden = true;
       successSection.hidden = false;
     } catch (err) {
       const msg = err && err.message ? err.message : String(err);
