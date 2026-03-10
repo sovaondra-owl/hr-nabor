@@ -1053,37 +1053,35 @@
       const dotClass = PIPELINE_STAGE_DOT[key] || 'bg-slate-400';
       const countClass = list.length > 0 ? 'bg-white text-cyan-700 shadow-sm border border-cyan-100' : 'bg-slate-200/70 text-slate-600';
       return `
-        <div class="w-[320px] min-w-[320px] shrink-0 flex flex-col max-h-full pipeline-column bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden" data-stage="${key}">
-          <div class="p-4 flex justify-between items-center border-b border-slate-200/60 shrink-0">
-            <div class="flex items-center gap-2">
-              <div class="w-2.5 h-2.5 rounded-full ${dotClass} shrink-0"></div>
-              <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">${escapeHtml(label)}</h3>
+        <div class="w-[220px] min-w-[220px] shrink-0 flex flex-col max-h-full pipeline-column bg-slate-50 border border-slate-100 rounded-xl overflow-hidden" data-stage="${key}">
+          <div class="px-2.5 py-1.5 flex justify-between items-center border-b border-slate-200/60 shrink-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <div class="w-2 h-2 rounded-full ${dotClass} shrink-0"></div>
+              <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider truncate">${escapeHtml(label)}</h3>
             </div>
-            <span class="text-xs font-bold px-2 py-0.5 rounded-md ${countClass}">${list.length}</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${countClass} shrink-0">${list.length}</span>
           </div>
-          <div class="pipeline-column-cards flex-1 overflow-y-auto no-scrollbar p-3 flex flex-col gap-3 min-h-[120px]" data-stage="${key}">
-            ${list.length === 0 ? `<div class="flex-1 min-h-[100px] border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center"><span class="text-xs text-slate-400 font-medium">Přetáhněte sem kartu</span></div>` : list.map(c => {
+          <div class="pipeline-column-cards flex-1 overflow-y-auto no-scrollbar p-2 flex flex-col gap-2 min-h-[80px]" data-stage="${key}">
+            ${list.length === 0 ? `<div class="flex-1 min-h-[60px] border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center"><span class="text-[10px] text-slate-400 font-medium">Přetáhněte sem</span></div>` : list.map(c => {
               const pos = positions.find(p => p.id === c.positionId);
               const name = [c.surname, c.firstname].filter(Boolean).join(' ') || '—';
               const meta = [pos ? pos.name : null, c.source].filter(Boolean).join(' · ') || '—';
               const initials = avatarInitials(c);
               const posName = pos ? pos.name : (c.positionRaw || '').trim();
               const avColor = avatarColor(posName || name);
-              return `<div class="pipeline-card bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all cursor-grab active:cursor-grabbing group flex-shrink-0" draggable="true" data-id="${c.id}" data-stage="${key}">
-                <div class="flex justify-between items-start mb-2">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full ${avColor} flex items-center justify-center font-bold text-sm shrink-0">${escapeHtml(initials)}</div>
-                    <div class="min-w-0">
-                      <h4 class="font-bold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors text-sm">${escapeHtml(name)}</h4>
-                    </div>
+              return `<div class="pipeline-card bg-white p-2.5 rounded-lg shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all cursor-grab active:cursor-grabbing group flex-shrink-0" draggable="true" data-id="${c.id}" data-stage="${key}">
+                <div class="flex justify-between items-start gap-1.5 mb-1.5">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-7 h-7 rounded-full ${avColor} flex items-center justify-center font-bold text-[10px] shrink-0">${escapeHtml(initials)}</div>
+                    <h4 class="font-semibold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors text-xs truncate">${escapeHtml(name)}</h4>
                   </div>
                   <div class="text-slate-300 group-hover:text-slate-500 transition-colors shrink-0" aria-hidden="true">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
                   </div>
                 </div>
-                <div class="mt-3">
-                  <p class="text-xs text-slate-500 font-medium">${escapeHtml(pos ? pos.name : meta || '—')}</p>
-                  ${c.source ? `<div class="flex items-center gap-2 mt-2"><span class="text-[10px] text-slate-400 font-medium bg-slate-50 px-2 py-1 rounded border border-slate-100">${escapeHtml(c.source)}</span></div>` : ''}
+                <div class="mt-1.5">
+                  <p class="text-[10px] text-slate-500 font-medium truncate" title="${escapeHtml(pos ? pos.name : meta || '—')}">${escapeHtml(pos ? pos.name : meta || '—')}</p>
+                  ${c.source ? `<span class="inline-block mt-1 text-[9px] text-slate-400 font-medium bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 truncate max-w-full">${escapeHtml(c.source)}</span>` : ''}
                 </div>
               </div>`;
             }).join('')}
