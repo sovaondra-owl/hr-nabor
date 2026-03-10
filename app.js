@@ -15,6 +15,29 @@
   let candidatesTablePage = 1;
   let candidateModalCvFiles = []; // { name, data } base64 v modalu kandidáta
 
+  function loadScript(src) {
+    if (document.querySelector('script[src="' + src + '"]')) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error('Nepodařilo načíst ' + src));
+      document.head.appendChild(s);
+    });
+  }
+  let xlsxLoadPromise = null;
+  function ensureXLSX() {
+    if (typeof XLSX !== 'undefined') return Promise.resolve();
+    if (!xlsxLoadPromise) xlsxLoadPromise = loadScript('https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js');
+    return xlsxLoadPromise;
+  }
+  let tesseractLoadPromise = null;
+  function ensureTesseract() {
+    if (typeof Tesseract !== 'undefined') return Promise.resolve();
+    if (!tesseractLoadPromise) tesseractLoadPromise = loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+    return tesseractLoadPromise;
+  }
+
   function getAuthHeaders() {
     const token = localStorage.getItem('sessionToken');
     const h = { 'Content-Type': 'application/json' };
@@ -405,6 +428,22 @@
     toggleRejectedFilterVisibility();
     showView(hasView ? viewId : 'dashboard');
     if (viewId === 'uzivatele' && hasView) renderUzivatele();
+  }
+
+  function initSidebarToggle() {
+    const SIDEBAR_KEY = 'hr_sidebar_collapsed';
+    const sidebar = document.getElementById('sidebar');
+    const btn = document.getElementById('sidebar-toggle');
+    if (!sidebar || !btn) return;
+    function setCollapsed(collapsed) {
+      sidebar.classList.toggle('sidebar-collapsed', !!collapsed);
+      btn.setAttribute('aria-label', collapsed ? 'Zobrazit postranní menu' : 'Skrýt postranní menu');
+      btn.setAttribute('title', collapsed ? 'Rozbalit menu' : 'Skrýt menu');
+      try { localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0'); } catch (_) {}
+    }
+    const saved = localStorage.getItem(SIDEBAR_KEY);
+    if (saved === '1') setCollapsed(true);
+    btn.addEventListener('click', () => setCollapsed(!sidebar.classList.contains('sidebar-collapsed')));
   }
 
   function applyRoleVisibility() {
@@ -2005,11 +2044,8 @@
     return '';
   }
 
-  function downloadImportTemplate() {
-    if (typeof XLSX === 'undefined') {
-      alert('Knihovna pro Excel není načtena. Obnovte stránku.');
-      return;
-    }
+  async function downloadImportTemplate() {
+    await ensureXLSX();
     const sheetData = [IMPORT_TEMPLATE_HEADERS];
     const ws = XLSX.utils.aoa_to_sheet(sheetData);
     const wb = XLSX.utils.book_new();
@@ -2195,7 +2231,8 @@
     info.hidden = false;
     info.innerHTML = `<span class="font-semibold text-slate-800">${escapeHtml(file.name)}</span><span class="text-slate-400 text-sm">${(file.size / 1024).toFixed(0)} kB</span>`;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
+      await ensureXLSX();
       const data = new Uint8Array(ev.target.result);
       const wb = XLSX.read(data, { type: 'array' });
       importedSheets = {};
@@ -2369,9 +2406,9 @@
     parsedCandidates = [];
   }
 
-  document.getElementById('btn-download-import-template').addEventListener('click', (e) => {
+  document.getElementById('btn-download-import-template').addEventListener('click', async (e) => {
     e.preventDefault();
-    downloadImportTemplate();
+    await downloadImportTemplate();
   });
 
   const fileDrop = document.getElementById('file-drop');
@@ -2789,7 +2826,7 @@
     if (freeBtn) freeBtn.disabled = true;
     if (analyzeBtn) analyzeBtn.disabled = true;
     try {
-      if (typeof Tesseract === 'undefined') throw new Error('Tesseract.js není načten. Obnovte stránku.');
+      await ensureTesseract();
       const allTexts = [];
       for (let i = 0; i < screenshotImages.length; i++) {
         if (statusEl) statusEl.textContent = `Rozpoznávám text (obrázek ${i + 1}/${screenshotImages.length})…`;
@@ -3186,7 +3223,17 @@ Vrať JEN JSON, žádný markdown, žádné vysvětlení.`;
     }
     applyRoleVisibility();
     initAuthUI();
-    await openDB(); await loadPositions(); openings = await getAllOpenings(); await loadCandidates(); await loadApplications();
+    await openDB();
+    const [positionsData, openingsData, candidatesData, applicationsData] = await Promise.all([
+      getAllPositions(),
+      getAllOpenings(),
+      getAllCandidates(),
+      getAllApplications()
+    ]);
+    positions = positionsData;
+    openings = openingsData;
+    candidates = candidatesData;
+    applications = applicationsData;
     await migrateContactFields();
     await migrateStrip420();
     await migrateSetZamitnut();
@@ -3197,7 +3244,7 @@ Vrať JEN JSON, žádný markdown, žádné vysvětlení.`;
     }
     const visible = getVisibleColumns();
     if (visible.length <= 1) localStorage.removeItem(COL_STORAGE_KEY);
-    initNav(); initExport(); initScreenshotModal();
+    initNav(); initSidebarToggle(); initExport(); initScreenshotModal();
     fillPositionSelect(document.getElementById('filter-position'));
     fillPositionSelect(document.getElementById('candidate-position'));
     renderDashboard(); renderCandidates(); renderPositions(); renderApplications();

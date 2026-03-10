@@ -15,6 +15,19 @@
 .sidebar-link .sidebar-active-bar { opacity: 0; }
 .sidebar-link.active .sidebar-active-bar { opacity: 1; }
 
+/* Sidebar skládací: zúžený režim – jen ikonky */
+#sidebar.sidebar-collapsed { width: 4.5rem; }
+#sidebar.sidebar-collapsed .sidebar-inner { min-width: 4.5rem; }
+#sidebar.sidebar-collapsed .sidebar-label { opacity: 0; width: 0; overflow: hidden; padding: 0; margin: 0; pointer-events: none; position: absolute; }
+#sidebar.sidebar-collapsed .sidebar-link { justify-content: center; }
+#sidebar.sidebar-collapsed .sidebar-auth-row { justify-content: center; }
+#sidebar.sidebar-collapsed .sidebar-toggle-icon-open { display: none; }
+#sidebar.sidebar-collapsed .sidebar-toggle-icon-closed { display: block !important; }
+#sidebar.sidebar-collapsed a[href="job-page.html"] { justify-content: center; }
+#sidebar.sidebar-collapsed .auth-positions { justify-content: center; }
+#sidebar.sidebar-collapsed .auth-positions span.flex { justify-content: center; }
+#sidebar .sidebar-label { transition: opacity 0.2s ease, width 0.2s ease; }
+
 /* View toggle button states */
 .view-toggle-btn { color: #64748b; background: transparent; border: none; cursor: pointer; }
 .view-toggle-btn:hover { color: #334155; }
