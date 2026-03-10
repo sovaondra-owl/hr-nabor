@@ -652,16 +652,22 @@
     if (!container || typeof Quill === 'undefined') return null;
     openingQuill = new Quill(container, {
       theme: 'snow',
-      placeholder: 'Popis role, očekávání, benefity, průběh pohovoru. Použijte nadpisy, tučné písmo, odrážky, zarovnání.',
+      placeholder: 'Popis role, očekávání, benefity, průběh pohovoru. Použijte nadpisy (H1–H3), tučné písmo, odrážky, zarovnání.',
       modules: {
         toolbar: [
-          [{ header: [1, 2, 3, false] }],
           ['bold', 'italic', 'underline'],
           [{ list: 'ordered' }, { list: 'bullet' }],
           [{ align: [] }],
           ['link']
         ]
       }
+    });
+    document.querySelectorAll('#opening-quill-headers .opening-header-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const val = btn.getAttribute('data-header');
+        if (val) openingQuill.format('header', parseInt(val, 10));
+      });
     });
     return openingQuill;
   }
