@@ -30,3 +30,11 @@
 .job-detail-meta-item strong { color: #0f172a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
 .job-detail-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; }
 .job-detail-tag { background: #f1f5f9; color: #475569; padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.8125rem; }
+
+/* Dropzone: stav nahrávání */
+.job-dropzone.is-uploading .job-dropzone-text { display: none; }
+.job-dropzone.is-uploading .job-dropzone-icon { display: none; }
+.job-dropzone.is-uploading .job-dropzone-loading { display: flex !important; }
+.job-upload-spinner { animation: job-spin 0.8s linear infinite; }
+.job-submit-spinner { animation: job-spin 0.8s linear infinite; }
+@keyframes job-spin { to { transform: rotate(360deg); } }

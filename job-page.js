@@ -182,8 +182,11 @@
   });
 
   const DROPZONE_DEFAULTS = { 'app-cv': 'Klikněte nebo přetáhněte soubor' };
+  const UPLOAD_FEEDBACK_MS = 700;
+
   function updateDropzoneLabels() {
     document.querySelectorAll('.job-dropzone').forEach(zone => {
+      zone.classList.remove('is-uploading');
       const forId = zone.getAttribute('data-for');
       const input = document.getElementById(forId);
       const textEl = zone.querySelector('.job-dropzone-text');
@@ -198,6 +201,14 @@
     });
   }
 
+  function showDropzoneUploading(zone) {
+    if (!zone) return;
+    zone.classList.add('is-uploading');
+    setTimeout(() => {
+      updateDropzoneLabels();
+    }, UPLOAD_FEEDBACK_MS);
+  }
+
   document.querySelectorAll('.job-dropzone').forEach(zone => {
     const forId = zone.getAttribute('data-for');
     const input = document.getElementById(forId);
@@ -210,10 +221,13 @@
       zone.classList.remove('bg-cyan-50/80', 'border-cyan-400');
       if (e.dataTransfer.files && e.dataTransfer.files.length) {
         input.files = e.dataTransfer.files;
-        updateDropzoneLabels();
+        showDropzoneUploading(zone);
       }
     });
-    input.addEventListener('change', updateDropzoneLabels);
+    input.addEventListener('change', () => {
+      if (input.files && input.files.length > 0) showDropzoneUploading(zone);
+      else updateDropzoneLabels();
+    });
   });
 
   function escapeHtml(s) {
@@ -239,6 +253,11 @@
     });
   }
 
+  const submitBtn = document.getElementById('btn-submit-application');
+  const submitBtnText = document.getElementById('btn-submit-text');
+  const submitBtnIcon = document.getElementById('btn-submit-icon');
+  const submitBtnOriginalHtml = submitBtn ? submitBtn.innerHTML : '';
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const gdprCheck = document.getElementById('app-gdpr-consent');
@@ -261,37 +280,54 @@
       return;
     }
 
-    const positionId = applicationPositionIdEl.value;
-    const files = [];
-    if (cvInput.files && cvInput.files[0]) {
-      files.push(await readFileAsBase64(cvInput.files[0]));
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      if (submitBtnText) submitBtnText.textContent = 'Odesílám…';
+      if (submitBtnIcon) submitBtnIcon.classList.add('job-submit-spinner');
     }
 
-    const startDateEl = document.getElementById('app-start-date');
-    const startDate = startDateEl && startDateEl.value ? startDateEl.value.trim() : '';
+    try {
+      const positionId = applicationPositionIdEl.value;
+      const files = [];
+      if (cvInput.files && cvInput.files[0]) {
+        files.push(await readFileAsBase64(cvInput.files[0]));
+      }
 
-    const contractEl = document.getElementById('app-contract');
-    const contract = contractEl && contractEl.value ? contractEl.value.trim() : '';
+      const startDateEl = document.getElementById('app-start-date');
+      const startDate = startDateEl && startDateEl.value ? startDateEl.value.trim() : '';
 
-    const application = {
-      positionId,
-      openingId: applicationOpeningIdEl.value || null,
-      surname: document.getElementById('app-surname').value.trim(),
-      firstname: document.getElementById('app-firstname').value.trim(),
-      email: document.getElementById('app-email').value.trim(),
-      phone: document.getElementById('app-phone').value.trim(),
-      linkedin: document.getElementById('app-linkedin').value.trim(),
-      startDate: startDate || null,
-      contract: contract || null,
-      message: document.getElementById('app-message').value.trim(),
-      files
-    };
+      const contractEl = document.getElementById('app-contract');
+      const contract = contractEl && contractEl.value ? contractEl.value.trim() : '';
 
-    await saveApplication(application);
-    applySection.hidden = true;
-    detailSection.hidden = true;
-    positionsSection.hidden = false;
-    successSection.hidden = false;
+      const application = {
+        positionId,
+        openingId: applicationOpeningIdEl.value || null,
+        surname: document.getElementById('app-surname').value.trim(),
+        firstname: document.getElementById('app-firstname').value.trim(),
+        email: document.getElementById('app-email').value.trim(),
+        phone: document.getElementById('app-phone').value.trim(),
+        linkedin: document.getElementById('app-linkedin').value.trim(),
+        startDate: startDate || null,
+        contract: contract || null,
+        message: document.getElementById('app-message').value.trim(),
+        files
+      };
+
+      await saveApplication(application);
+      applySection.hidden = true;
+      detailSection.hidden = true;
+      positionsSection.hidden = false;
+      successSection.hidden = false;
+    } catch (err) {
+      const msg = err && err.message ? err.message : String(err);
+      alert('Přihlášku se nepodařilo odeslat. Zkuste to znovu nebo nás kontaktujte.\n\n' + msg);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        if (submitBtnText) submitBtnText.textContent = 'Odeslat přihlášku';
+        if (submitBtnIcon) submitBtnIcon.classList.remove('job-submit-spinner');
+      }
+    }
   });
 
   loadOpeningsPublic();
