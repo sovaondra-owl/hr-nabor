@@ -20,7 +20,8 @@ const MIMES = {
 };
 
 const server = http.createServer((req, res) => {
-  let file = req.url === '/' ? '/index.html' : req.url;
+  const urlPath = req.url.split('?')[0] || '/';
+  let file = urlPath === '/' ? '/index.html' : urlPath;
   file = path.join(__dirname, path.normalize(file).replace(/^(\.\.(\/|\\|$))+/, ''));
   const ext = path.extname(file);
   const mime = MIMES[ext] || 'application/octet-stream';

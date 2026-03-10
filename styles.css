@@ -57,6 +57,20 @@
   border: 1px solid #f1f5f9;
 }
 
+/* Quill v modalu výběrky – roletka nadpisů musí být nad obsahem a nesmí být ořezaná */
+#modal-opening #opening-description-editor {
+  overflow: visible;
+}
+#modal-opening .ql-toolbar {
+  position: relative;
+  z-index: 20;
+}
+#modal-opening .ql-picker-options,
+#modal-opening .ql-snow .ql-picker.ql-expanded .ql-picker-options {
+  z-index: 10001 !important;
+  position: absolute !important;
+}
+
 /* Columns dropdown inside wrapper */
 .columns-dropdown label {
   display: flex;

@@ -107,11 +107,18 @@ CREATE TABLE IF NOT EXISTS openings (
   location TEXT,
   status TEXT NOT NULL DEFAULT 'aktivni',
   description TEXT,
+  workload TEXT,
+  required_skills TEXT,
+  required_software TEXT,
   opened_at DATE,
   public_slug TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE openings ADD COLUMN IF NOT EXISTS workload TEXT;
+ALTER TABLE openings ADD COLUMN IF NOT EXISTS required_skills TEXT;
+ALTER TABLE openings ADD COLUMN IF NOT EXISTS required_software TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_openings_status ON openings(status);
 CREATE INDEX IF NOT EXISTS idx_openings_public_slug ON openings(public_slug);

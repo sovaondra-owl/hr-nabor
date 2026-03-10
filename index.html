@@ -6,6 +6,7 @@
   <title>HR Nábor | Kofein</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script>
     tailwind.config = {
@@ -539,10 +540,16 @@
     <div class="modal-backdrop bg-slate-900/40 backdrop-blur-sm"></div>
     <div class="modal-content max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] bg-white">
       <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100 flex-shrink-0">
-        <button type="button" class="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-sm font-semibold rounded-xl transition-colors" id="btn-detail-edit">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-          Upravit profil
-        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" class="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-sm font-semibold rounded-xl transition-colors" id="btn-detail-edit">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            Upravit profil
+          </button>
+          <button type="button" class="flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 text-sm font-semibold rounded-xl transition-colors" id="btn-detail-delete" title="Smazat kandidáta">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4m1 0h-2M9 4h2"></path></svg>
+            Smazat
+          </button>
+        </div>
         <button type="button" class="modal-close p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors" aria-label="Zavřít">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
@@ -800,7 +807,7 @@
   <!-- Modal: Výběrové řízení -->
   <div id="modal-opening" class="modal" aria-hidden="true">
     <div class="modal-backdrop"></div>
-    <div class="modal-content max-w-xl">
+    <div class="modal-content w-[80%] max-w-[80vw]">
       <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
         <h2 class="text-lg font-semibold text-slate-900" id="modal-opening-title">Výběrové řízení</h2>
         <button type="button" class="modal-close text-slate-400 hover:text-slate-600 text-2xl leading-none p-1 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Zavřít">&times;</button>
@@ -823,14 +830,24 @@
             <input type="text" id="opening-location" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="Praha / Remote">
           </label>
           <label class="block text-sm">
+            <span class="font-medium text-slate-500">Úvazek</span>
+            <select id="opening-workload" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
+              <option value="">—</option>
+              <option value="Plný úvazek">Plný úvazek</option>
+              <option value="Zkrácený úvazek">Zkrácený úvazek</option>
+              <option value="Brigáda">Brigáda</option>
+              <option value="Praktikum">Praktikum</option>
+            </select>
+          </label>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label class="block text-sm">
             <span class="font-medium text-slate-500">Stav náboru</span>
             <select id="opening-status" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
               <option value="aktivni">Aktivní</option>
               <option value="ukonceno">Ukončené</option>
             </select>
           </label>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <label class="block text-sm">
             <span class="font-medium text-slate-500">Datum zahájení náboru</span>
             <input type="date" id="opening-date" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
@@ -838,7 +855,17 @@
         </div>
         <label class="block text-sm">
           <span class="font-medium text-slate-500">Popis pozice (pro job stránku)</span>
-          <textarea id="opening-description" rows="6" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y" placeholder="Stručně popište roli, očekávání a benefity."></textarea>
+          <div id="opening-description-editor" class="mt-1 min-h-[180px] border border-slate-200 rounded-lg bg-white focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400 overflow-hidden">
+            <!-- Quill toolbar + editor -->
+          </div>
+        </label>
+        <label class="block text-sm">
+          <span class="font-medium text-slate-500">Požadované znalosti</span>
+          <input type="text" id="opening-required-skills" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="např. PPC, Google Ads, Sklik, Online marketing">
+        </label>
+        <label class="block text-sm">
+          <span class="font-medium text-slate-500">Požadované softwary / nástroje</span>
+          <input type="text" id="opening-required-software" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="např. Google Analytics, G Suite, Google Sheets">
         </label>
         <p class="text-xs text-slate-500 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
           Po uložení se vygeneruje unikátní odkaz na job stránku pro toto výběrové řízení. Přihlášky se automaticky propojí s kandidáty v tomto náboru.
@@ -864,6 +891,23 @@
       <div class="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
         <button type="button" class="modal-close clear-db-cancel bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">Zrušit</button>
         <button type="button" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm" id="btn-clear-db-confirm">Smazat všechny kandidáty</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Potvrzení heslem pro smazání kandidáta -->
+  <div id="modal-delete-candidate-confirm" class="modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content max-w-md">
+      <div class="px-6 py-5">
+        <h2 class="text-lg font-semibold text-slate-900 mb-1">Smazat kandidáta</h2>
+        <p class="text-sm text-slate-500 mb-4">Kandidát bude trvale odstraněn z databáze. Pro potvrzení zadejte své heslo.</p>
+        <input type="password" id="delete-candidate-password" class="w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" placeholder="Heslo" autocomplete="current-password">
+        <p class="mt-2 text-sm text-red-600 hidden" id="delete-candidate-password-error">Špatné heslo. Zkuste to znovu.</p>
+      </div>
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
+        <button type="button" class="modal-close delete-candidate-cancel bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">Zrušit</button>
+        <button type="button" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm" id="btn-delete-candidate-confirm">Smazat kandidáta</button>
       </div>
     </div>
   </div>
@@ -903,6 +947,7 @@
 
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.min.js"></script>
   <!-- Supabase klient + konfigurace musí být načtené před app.js -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>

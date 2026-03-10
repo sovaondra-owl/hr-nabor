@@ -3,17 +3,95 @@
   const applySection = document.getElementById('job-apply');
   const successSection = document.getElementById('job-success');
   const positionsSection = document.getElementById('job-positions');
+  const detailSection = document.getElementById('job-detail');
   const applyPositionNameEl = document.getElementById('apply-position-name');
   const applicationPositionIdEl = document.getElementById('application-position-id');
   const applicationOpeningIdEl = document.getElementById('application-opening-id');
   const form = document.getElementById('application-form');
   const MIN_SUBMIT_SECONDS = 15;
   let formShownAt = 0;
+  let allOpenings = [];
+  let allPositions = [];
+  let currentOpening = null;
+
+  function sanitizeDescriptionHtml(html) {
+    if (!html || !html.trim()) return '';
+    const allowlist = ['p','br','strong','em','b','i','u','ul','ol','li','h1','h2','h3','div','span','a'];
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '');
+    const walk = (node) => {
+      if (node.nodeType === 3) return;
+      if (node.nodeType === 1) {
+        const tag = node.tagName.toLowerCase();
+        if (!allowlist.includes(tag)) {
+          const text = document.createTextNode(node.textContent || '');
+          node.parentNode.replaceChild(text, node);
+          return;
+        }
+        if (tag === 'a') {
+          const href = (node.getAttribute('href') || '').trim();
+          if (/^\s*javascript:/i.test(href)) node.removeAttribute('href');
+        }
+        Array.from(node.attributes).forEach(attr => { if (attr.name !== 'href' && attr.name !== 'class') node.removeAttribute(attr.name); });
+      }
+      let next; for (let c = node.firstChild; c; c = next) { next = c.nextSibling; walk(c); }
+    };
+    walk(tmp);
+    return tmp.innerHTML.trim();
+  }
+
+  function showJobDetail(opening) {
+    currentOpening = opening;
+    const pos = allPositions.find(p => p.id === opening.positionId);
+    const title = opening.title || (pos ? pos.name : 'Pozice');
+
+    document.getElementById('job-detail-title').textContent = title;
+    const descEl = document.getElementById('job-detail-description');
+    const raw = opening.description && opening.description.trim() ? opening.description.trim() : '';
+    if (raw.indexOf('<') !== -1 && raw.indexOf('>') !== -1) {
+      descEl.innerHTML = sanitizeDescriptionHtml(raw);
+      descEl.classList.remove('job-detail-description-plain');
+    } else {
+      descEl.textContent = raw || 'Popis pozice není k dispozici.';
+      descEl.classList.add('job-detail-description-plain');
+    }
+
+    const metaEl = document.getElementById('job-detail-meta');
+    const parts = [];
+    if (opening.location && opening.location.trim()) {
+      parts.push(`<div class="job-detail-meta-item"><strong>Lokalita</strong><span>${escapeHtml(opening.location)}</span></div>`);
+    }
+    if (opening.workload && opening.workload.trim()) {
+      parts.push(`<div class="job-detail-meta-item"><strong>Úvazek</strong><span>${escapeHtml(opening.workload)}</span></div>`);
+    }
+    if (opening.requiredSkills && opening.requiredSkills.trim()) {
+      const tags = opening.requiredSkills.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+      parts.push(`<div class="job-detail-meta-item"><strong>Požadované znalosti</strong><div class="job-detail-tags">${tags.map(t => `<span class="job-detail-tag">${escapeHtml(t)}</span>`).join('')}</div></div>`);
+    }
+    if (opening.requiredSoftware && opening.requiredSoftware.trim()) {
+      const tags = opening.requiredSoftware.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+      parts.push(`<div class="job-detail-meta-item"><strong>Softwary / nástroje</strong><div class="job-detail-tags">${tags.map(t => `<span class="job-detail-tag">${escapeHtml(t)}</span>`).join('')}</div></div>`);
+    }
+    metaEl.innerHTML = parts.length ? parts.join('') : '<p class="text-slate-500 text-sm">—</p>';
+
+    positionsSection.hidden = true;
+    applySection.hidden = true;
+    successSection.hidden = true;
+    detailSection.hidden = false;
+  }
+
+  function showPositionsList() {
+    currentOpening = null;
+    detailSection.hidden = true;
+    applySection.hidden = true;
+    successSection.hidden = true;
+    positionsSection.hidden = false;
+  }
 
   async function loadOpeningsPublic() {
     await openDB();
-    const allOpenings = (await getAllOpenings()).filter(o => o.status === 'aktivni');
-    const allPositions = await getAllPositions();
+    allOpenings = (await getAllOpenings()).filter(o => o.status === 'aktivni');
+    allPositions = await getAllPositions();
     if (allOpenings.length === 0) {
       cardsEl.innerHTML = '<p class="empty">Momentálně nemáme vypsané otevřené pozice. Zkuste to později nebo nás kontaktujte.</p>';
       return;
@@ -28,18 +106,7 @@
         cardsEl.innerHTML = '<p class="empty">Toto výběrové řízení nebylo nalezeno nebo již není aktivní.</p>';
         return;
       }
-      const pos = allPositions.find(p => p.id === opening.positionId);
-      positionsSection.hidden = true;
-      successSection.hidden = true;
-      applySection.hidden = false;
-      formShownAt = Date.now();
-      applyPositionNameEl.textContent = opening.title || (pos ? pos.name : '');
-      applicationPositionIdEl.value = opening.positionId || '';
-      applicationOpeningIdEl.value = opening.id;
-      form.reset();
-      applicationPositionIdEl.value = opening.positionId || '';
-      applicationOpeningIdEl.value = opening.id;
-      updateDropzoneLabels();
+      showJobDetail(opening);
       return;
     }
 
@@ -59,13 +126,15 @@
 
     cardsEl.querySelectorAll('.job-card').forEach(card => {
       card.querySelector('.btn-apply-job').addEventListener('click', () => {
-        showApplyForm(card.dataset.openingId, card.dataset.positionId, card.dataset.name);
+        const opening = allOpenings.find(o => o.id === card.dataset.openingId);
+        if (opening) showJobDetail(opening);
       });
     });
   }
 
   function showApplyForm(openingId, positionId, positionName) {
     positionsSection.hidden = true;
+    detailSection.hidden = true;
     successSection.hidden = true;
     applySection.hidden = false;
     formShownAt = Date.now();
@@ -78,10 +147,30 @@
     updateDropzoneLabels();
   }
 
+  document.getElementById('job-detail-apply-btn').addEventListener('click', () => {
+    if (!currentOpening) return;
+    const name = currentOpening.title || (allPositions.find(p => p.id === currentOpening.positionId) || {}).name || 'Pozice';
+    showApplyForm(currentOpening.id, currentOpening.positionId, name);
+  });
+
+  document.getElementById('job-detail-back').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (window.location.search && new URLSearchParams(window.location.search).get('job')) {
+      window.location.href = 'job-page.html';
+      return;
+    }
+    showPositionsList();
+  });
+
   document.getElementById('btn-back-positions').addEventListener('click', () => {
     applySection.hidden = true;
     successSection.hidden = true;
-    positionsSection.hidden = false;
+    if (currentOpening) {
+      showJobDetail(currentOpening);
+    } else {
+      positionsSection.hidden = false;
+      detailSection.hidden = true;
+    }
   });
 
   const DROPZONE_DEFAULTS = { 'app-cv': 'Klikněte nebo přetáhněte soubor' };
@@ -188,6 +277,7 @@
 
     await saveApplication(application);
     applySection.hidden = true;
+    detailSection.hidden = true;
     positionsSection.hidden = false;
     successSection.hidden = false;
   });

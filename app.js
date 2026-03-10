@@ -645,16 +645,40 @@
     }
   }
 
+  let openingQuill = null;
+  function ensureOpeningQuill() {
+    if (openingQuill) return openingQuill;
+    const container = document.getElementById('opening-description-editor');
+    if (!container || typeof Quill === 'undefined') return null;
+    openingQuill = new Quill(container, {
+      theme: 'snow',
+      placeholder: 'Popis role, očekávání, benefity, průběh pohovoru. Použijte nadpisy, tučné písmo, odrážky, zarovnání.',
+      modules: {
+        toolbar: [
+          [{ header: 1 }, { header: 2 }, { header: 3 }],
+          ['bold', 'italic', 'underline'],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          [{ align: [] }],
+          ['link']
+        ]
+      }
+    });
+    return openingQuill;
+  }
+
   function openOpeningModal(id) {
     const titleEl = document.getElementById('modal-opening-title');
     const idEl = document.getElementById('opening-id');
     const titleInput = document.getElementById('opening-title');
     const posSelect = document.getElementById('opening-position');
     const locInput = document.getElementById('opening-location');
+    const workloadSelect = document.getElementById('opening-workload');
     const dateInput = document.getElementById('opening-date');
     const statusSelect = document.getElementById('opening-status');
-    const descInput = document.getElementById('opening-description');
+    const skillsInput = document.getElementById('opening-required-skills');
+    const softwareInput = document.getElementById('opening-required-software');
     fillPositionSelect(posSelect, false);
+    const quill = ensureOpeningQuill();
     if (id) {
       const o = openings.find(x => x.id === id);
       if (!o) return;
@@ -663,8 +687,14 @@
       titleInput.value = o.title || '';
       posSelect.value = o.positionId || '';
       locInput.value = o.location || '';
+      workloadSelect.value = o.workload || '';
       statusSelect.value = o.status || 'aktivni';
-      descInput.value = o.description || '';
+      if (quill) {
+        if (o.description && String(o.description).trim().indexOf('<') !== -1) quill.clipboard.dangerouslyPasteHTML(o.description);
+        else quill.setText(o.description || '');
+      }
+      skillsInput.value = o.requiredSkills || '';
+      softwareInput.value = o.requiredSoftware || '';
       dateInput.value = o.openedAt ? o.openedAt.split('T')[0] : '';
     } else {
       titleEl.textContent = 'Nové výběrové řízení';
@@ -672,8 +702,11 @@
       titleInput.value = '';
       posSelect.value = positions[0] ? positions[0].id : '';
       locInput.value = '';
+      workloadSelect.value = '';
       statusSelect.value = 'aktivni';
-      descInput.value = '';
+      if (quill) quill.setText('');
+      skillsInput.value = '';
+      softwareInput.value = '';
       const today = new Date().toISOString().split('T')[0];
       dateInput.value = today;
     }
@@ -687,13 +720,17 @@
     const title = document.getElementById('opening-title').value.trim();
     const positionId = document.getElementById('opening-position').value || null;
     if (!title) return alert('Zadejte název výběrového řízení.');
+    const descHtml = openingQuill ? openingQuill.root.innerHTML.trim() : '';
     await saveOpening({
       id: id || undefined,
       title,
       positionId,
       location: document.getElementById('opening-location').value.trim(),
+      workload: document.getElementById('opening-workload').value.trim() || null,
       status: document.getElementById('opening-status').value || 'aktivni',
-      description: document.getElementById('opening-description').value.trim(),
+      description: descHtml,
+      requiredSkills: document.getElementById('opening-required-skills').value.trim() || null,
+      requiredSoftware: document.getElementById('opening-required-software').value.trim() || null,
       openedAt: document.getElementById('opening-date').value || null
     });
     openings = await getAllOpenings();
@@ -1313,6 +1350,17 @@
     renderSearchResults(list);
   }
 
+  function openDeleteCandidateConfirmModal(candidateId) {
+    const modal = document.getElementById('modal-delete-candidate-confirm');
+    modal.dataset.candidateId = candidateId || '';
+    document.getElementById('delete-candidate-password').value = '';
+    document.getElementById('delete-candidate-password-error').classList.add('hidden');
+    document.getElementById('delete-candidate-password-error').textContent = '';
+    closeModal('modal-candidate-detail');
+    modal.classList.add('modal-open');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
   function openCandidateDetail(id) {
     const c = candidates.find(x => x.id === id);
     if (!c) return;
@@ -1460,6 +1508,7 @@
       ` : ''}
     `;
     document.getElementById('btn-detail-edit').onclick = () => { closeModal('modal-candidate-detail'); openCandidateModal(id); };
+    document.getElementById('btn-detail-delete').onclick = () => openDeleteCandidateConfirmModal(id);
     document.getElementById('modal-candidate-detail').classList.add('modal-open');
     document.getElementById('modal-candidate-detail').setAttribute('aria-hidden', 'false');
 
@@ -2459,6 +2508,60 @@
     });
   });
 
+  document.getElementById('btn-delete-candidate-confirm').addEventListener('click', async () => {
+    const modal = document.getElementById('modal-delete-candidate-confirm');
+    const candidateId = modal.dataset.candidateId;
+    const passwordInput = document.getElementById('delete-candidate-password');
+    const errorEl = document.getElementById('delete-candidate-password-error');
+    const password = (passwordInput.value || '').trim();
+    if (!password) {
+      errorEl.textContent = 'Zadejte heslo.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    if (!currentUser || !currentUser.email || !supabaseClient) {
+      errorEl.textContent = 'Nejste přihlášeni.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    errorEl.classList.add('hidden');
+    try {
+      const { error } = await supabaseClient.auth.signInWithPassword({ email: currentUser.email, password });
+      if (error) {
+        errorEl.textContent = 'Špatné heslo. Zkuste to znovu.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+    } catch (e) {
+      errorEl.textContent = 'Chyba ověření: ' + (e.message || e);
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    modal.classList.remove('modal-open');
+    modal.setAttribute('aria-hidden', 'true');
+    passwordInput.value = '';
+    try {
+      await deleteCandidate(candidateId);
+      candidates = await getAllCandidates();
+      renderCandidates();
+      renderDashboard();
+      if (typeof renderPipelineIfActive === 'function') renderPipelineIfActive();
+      if (typeof renderSearchResults === 'function') renderSearchResults(filterCandidatesSearch());
+    } catch (err) {
+      alert('Kandidáta se nepodařilo smazat: ' + (err.message || err));
+    }
+  });
+
+  document.getElementById('delete-candidate-password').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btn-delete-candidate-confirm').click();
+  });
+  document.querySelectorAll('.delete-candidate-cancel, #modal-delete-candidate-confirm .modal-backdrop').forEach(el => {
+    el.addEventListener('click', () => {
+      document.getElementById('modal-delete-candidate-confirm').classList.remove('modal-open');
+      document.getElementById('modal-delete-candidate-confirm').setAttribute('aria-hidden', 'true');
+    });
+  });
+
   // --- Modals ---
   function closeModal(id) {
     document.getElementById(id).classList.remove('modal-open');
@@ -2466,7 +2569,8 @@
   }
 
   document.querySelectorAll('.modal-backdrop, .modal-close').forEach(el => {
-    el.addEventListener('click', () => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest && e.target.closest('.ql-picker')) return;
       document.querySelectorAll('.modal').forEach(m => { m.classList.remove('modal-open'); m.setAttribute('aria-hidden', 'true'); });
     });
   });
