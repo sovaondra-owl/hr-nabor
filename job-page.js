@@ -183,6 +183,7 @@
 
   const DROPZONE_DEFAULTS = { 'app-cv': 'Klikněte nebo přetáhněte soubor' };
   const UPLOAD_FEEDBACK_MS = 700;
+  let dropzoneIgnoreClickUntil = 0;
 
   function updateDropzoneLabels() {
     document.querySelectorAll('.job-dropzone').forEach(zone => {
@@ -213,7 +214,18 @@
     const forId = zone.getAttribute('data-for');
     const input = document.getElementById(forId);
     if (!input) return;
-    zone.addEventListener('click', (e) => { if (!e.target.closest('input')) input.click(); });
+    zone.addEventListener('click', (e) => {
+      if (e.target.closest('input')) return;
+      if (Date.now() < dropzoneIgnoreClickUntil) return;
+      e.preventDefault();
+      input.click();
+    });
+    zone.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      if (Date.now() < dropzoneIgnoreClickUntil) return;
+      input.click();
+    });
     zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('bg-cyan-50/80', 'border-cyan-400'); });
     zone.addEventListener('dragleave', () => { zone.classList.remove('bg-cyan-50/80', 'border-cyan-400'); });
     zone.addEventListener('drop', (e) => {
@@ -225,6 +237,7 @@
       }
     });
     input.addEventListener('change', () => {
+      dropzoneIgnoreClickUntil = Date.now() + 500;
       if (input.files && input.files.length > 0) showDropzoneUploading(zone);
       else updateDropzoneLabels();
     });
