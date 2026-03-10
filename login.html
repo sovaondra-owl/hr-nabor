@@ -42,8 +42,11 @@
       </p>
     </div>
   </div>
+  <!-- Supabase klient + konfigurace -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
   <script>
+    const supabaseClient = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
     (function () {
       const form = document.getElementById('login-form');
       const errEl = document.getElementById('login-error');
@@ -63,25 +66,27 @@
         }
         btn.disabled = true;
         try {
-          const res = await fetch(window.API_BASE + '/api/auth/login', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-          });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            showError(data.error || 'Přihlášení se nezdařilo.');
+          const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error || !data.user) {
+            showError(error?.message || 'Přihlášení se nezdařilo.');
             btn.disabled = false;
             return;
           }
-          if (data.sessionToken) {
-            localStorage.setItem('sessionToken', data.sessionToken);
-            localStorage.setItem('user', JSON.stringify(data.user));
-          }
+          // Načteme roli z tabulky profiles
+          const { data: profile, error: profErr } = await supabaseClient
+            .from('profiles')
+            .select('role, email')
+            .eq('id', data.user.id)
+            .single();
+          const user = {
+            id: data.user.id,
+            email: profile?.email || data.user.email || email,
+            role: profile?.role || 'viewer',
+          };
+          localStorage.setItem('user', JSON.stringify(user));
           window.location.href = 'index.html';
         } catch (err) {
-          showError('Chyba připojení k serveru. Zkontrolujte, že API běží na ' + window.API_BASE);
+          showError('Chyba připojení k Supabase. Zkuste to prosím znovu.');
           btn.disabled = false;
         }
       });

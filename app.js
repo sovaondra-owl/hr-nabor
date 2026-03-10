@@ -1,6 +1,7 @@
 (function () {
   let API_BASE = window.API_BASE || 'http://localhost:3001';
   if (!API_BASE || API_BASE.startsWith('/')) API_BASE = 'http://localhost:3001';
+  const supabaseClient = window.supabaseClient || null;
   let currentUser = null;
   let positions = [];
   let openings = [];
@@ -16,6 +17,8 @@
     if (token) h['Authorization'] = 'Bearer ' + token;
     return h;
   }
+  // Původní API klient k Node backendu zůstává pro případné budoucí použití,
+  // ale autentizaci nyní řeší Supabase.
   async function apiGet(path) {
     const res = await fetch(API_BASE + path, { credentials: 'include', headers: getAuthHeaders() });
     return res;
@@ -362,8 +365,13 @@
     const logoutBtn = document.getElementById('auth-logout');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', async () => {
-        await apiPost('/api/auth/logout').catch(() => ({}));
-        localStorage.removeItem('sessionToken');
+        if (supabaseClient) {
+          try {
+            await supabaseClient.auth.signOut();
+          } catch (e) {
+            // ignore
+          }
+        }
         localStorage.removeItem('user');
         window.location.href = 'login.html';
       });
@@ -374,117 +382,44 @@
     const wrap = document.getElementById('uzivatele-list-wrap');
     if (!wrap || !can('usersAndInvites')) return;
     try {
-      const res = await apiGet('/api/users');
-      if (!res.ok) { wrap.innerHTML = '<p class="text-slate-500 text-sm">Načtení se nezdařilo.</p>'; return; }
-      const data = await res.json();
-      const users = data.users || [];
-      const invitations = data.invitations || [];
+      if (!supabaseClient) {
+        wrap.innerHTML = '<p class="text-slate-500 text-sm">Supabase klient není k dispozici.</p>';
+        return;
+      }
+      // Načteme jen vlastní profil (policy "read own profile") – zobrazí se vám váš účet
+      const myId = currentUser && currentUser.id;
+      if (!myId) {
+        wrap.innerHTML = '<p class="text-slate-500 text-sm">Nejste přihlášeni.</p>';
+        return;
+      }
+      const { data: row, error } = await supabaseClient
+        .from('profiles')
+        .select('id, email, role, created_at')
+        .eq('id', myId)
+        .single();
+      if (error) {
+        wrap.innerHTML = '<p class="text-slate-500 text-sm">Načtení profilu se nezdařilo: ' + (error.message || '') + '</p>';
+        return;
+      }
+      const list = row ? [row] : [];
       const roleLabel = (r) => ({ admin: 'Admin', manager: 'Manager', recruiter: 'Náborář', viewer: 'Jen čtení' }[r] || r);
-      const origin = window.location.origin || 'http://localhost:3000';
-      const pendingInvites = invitations.filter(i => !i.usedAt);
       wrap.innerHTML = `
         <div class="mb-8">
           <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Uživatelé</h3>
           <div class="bg-white rounded-xl border border-slate-100 overflow-hidden">
             <table class="w-full text-sm">
-              <thead class="bg-slate-50"><tr><th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">E-mail</th><th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Role</th><th class="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase">Akce</th></tr></thead>
-              <tbody>${users.map(u => `<tr class="border-t border-slate-100"><td class="px-4 py-3">${escapeHtml(u.email)}</td><td class="px-4 py-3">${escapeHtml(roleLabel(u.role))}</td><td class="px-4 py-3 text-right">${currentUser && currentUser.id === u.id ? '<span class="text-slate-400 text-xs">(vy)</span>' : '<button type="button" class="user-delete-btn px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200" data-user-id="' + escapeHtml(u.id) + '" data-email="' + escapeHtml(u.email) + '">Odstranit</button>'}</td></tr>`).join('')}</tbody>
+              <thead class="bg-slate-50"><tr><th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">E-mail</th><th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Role</th></tr></thead>
+              <tbody>${list.map(u => `<tr class="border-t border-slate-100"><td class="px-4 py-3">${escapeHtml(u.email)}</td><td class="px-4 py-3">${escapeHtml(roleLabel(u.role))}${currentUser && currentUser.id === u.id ? ' <span class="text-slate-400 text-xs">(vy)</span>' : ''}</td></tr>`).join('')}</tbody>
             </table>
           </div>
         </div>
         <div>
           <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Pozvat uživatele</h3>
-          <p class="text-sm text-slate-500 mb-3">Zadejte e-mail a roli. Vygeneruje se odkaz – pošlete ho pozvanému. Po otevření si nastaví heslo a zaregistruje se.</p>
-          <div class="flex flex-wrap gap-3 items-end">
-            <div><label class="block text-xs font-medium text-slate-500 mb-1">E-mail</label><input type="email" id="invite-email" class="px-3 py-2 border border-slate-200 rounded-lg text-sm w-64" placeholder="email@firma.cz"></div>
-            <div><label class="block text-xs font-medium text-slate-500 mb-1">Role</label><select id="invite-role" class="px-3 py-2 border border-slate-200 rounded-lg text-sm"><option value="viewer">Jen čtení</option><option value="recruiter">Náborář</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>
-            <button type="button" id="btn-invite" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg">Vygenerovat odkaz</button>
-          </div>
-          <div id="invite-message" class="mt-3 hidden"></div>
-          <div class="mt-6">
-            <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Čekající pozvánky</h4>
-            ${pendingInvites.length === 0 ? '<p class="text-sm text-slate-400">Žádné. Vygenerujte odkaz výše a pošlete ho e-mailem.</p>' : '<ul class="text-sm space-y-2">' + pendingInvites.map(i => {
-              const link = origin + '/set-password.html?token=' + encodeURIComponent(i.token || '');
-              return `<li class="flex flex-wrap items-center justify-between gap-2 py-1 border-b border-slate-100"><span>${escapeHtml(i.email)} – ${escapeHtml(roleLabel(i.role))} <span class="text-slate-400">(vyprší ${new Date(i.expiresAt).toLocaleDateString('cs-CZ')})</span></span><div class="flex gap-2 items-center"><input type="text" readonly class="invite-link-input w-64 max-w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs font-mono" value="${escapeHtml(link)}"><button type="button" class="invite-copy-link-btn px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50 rounded border border-indigo-200" data-link="${escapeHtml(link)}">Kopírovat odkaz</button></div></li>`;
-            }).join('') + '</ul>'}
-          </div>
+          <p class="text-sm text-slate-500">Nové uživatele přidávejte v Supabase: Authentication → Users (vytvořit účet) a Table Editor → profiles (přidat řádek se stejným id, e-mailem a rolí). Pozvánky e-mailem doplníme později.</p>
         </div>
       `;
     } catch (e) {
-      wrap.innerHTML = '<p class="text-slate-500 text-sm">Chyba připojení k API.</p>';
-    }
-    if (!wrap._usersClickBound) {
-      wrap._usersClickBound = true;
-      wrap.addEventListener('click', async (e) => {
-      const copyBtn = e.target.closest('.invite-copy-link-btn');
-      if (copyBtn) {
-        const link = copyBtn.getAttribute('data-link') || '';
-        if (link) {
-          try {
-            await navigator.clipboard.writeText(link);
-            const orig = copyBtn.textContent;
-            copyBtn.textContent = 'Zkopírováno';
-            setTimeout(() => { copyBtn.textContent = orig; }, 2000);
-          } catch (_) {}
-        }
-        return;
-      }
-      const deleteBtn = e.target.closest('.user-delete-btn');
-      if (deleteBtn) {
-        const userId = deleteBtn.getAttribute('data-user-id');
-        const email = deleteBtn.getAttribute('data-email') || '';
-        if (!userId) return;
-        if (!confirm('Opravdu odstranit uživatele ' + email + '? Tuto akci nelze vrátit zpět.')) return;
-        deleteBtn.disabled = true;
-        try {
-          const res = await apiPost('/api/users/delete', { id: userId });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            alert(data.error || 'Odstranění se nezdařilo (kód ' + res.status + ').');
-            deleteBtn.disabled = false;
-            return;
-          }
-          renderUzivatele();
-        } catch (err) {
-          alert('Chyba připojení k serveru.');
-          deleteBtn.disabled = false;
-        }
-      }
-      });
-    }
-    const btnInvite = document.getElementById('btn-invite');
-    const msgEl = document.getElementById('invite-message');
-    if (btnInvite) {
-      btnInvite.onclick = async () => {
-        const email = (document.getElementById('invite-email')?.value || '').trim();
-        const role = document.getElementById('invite-role')?.value || 'viewer';
-        if (!email) { msgEl.innerHTML = '<p class="text-sm text-amber-600">Zadejte e-mail.</p>'; msgEl.classList.remove('hidden'); return; }
-        msgEl.classList.add('hidden');
-        try {
-          const res = await apiPost('/api/invitations', { email, role });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) { msgEl.innerHTML = '<p class="text-sm text-red-600">' + (data.error || 'Chyba') + '</p>'; msgEl.classList.remove('hidden'); return; }
-          const link = data.inviteLink || '';
-          const sent = data.emailSent;
-          msgEl.innerHTML = sent
-            ? '<p class="text-sm text-emerald-600 font-medium">Odkaz vytvořen a e-mail odeslán na ' + escapeHtml(data.email) + '.</p>'
-            : '<p class="text-sm text-slate-600 mb-2">Odkaz vygenerován. Pošlete ho pozvanému (e-mailem, chatem…). Po otevření si nastaví heslo a zaregistruje se.</p>' +
-              (link ? '<div class="flex gap-2 items-center flex-wrap mt-2"><input type="text" readonly class="flex-1 min-w-[200px] px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono" value="' + escapeHtml(link) + '" id="invite-link-copy"><button type="button" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg" id="invite-copy-btn">Kopírovat odkaz</button></div>' : '');
-          msgEl.classList.remove('hidden');
-          const copyBtn = document.getElementById('invite-copy-btn');
-          const linkInput = document.getElementById('invite-link-copy');
-          if (copyBtn && linkInput) {
-            copyBtn.addEventListener('click', () => {
-              linkInput.select();
-              navigator.clipboard.writeText(linkInput.value).then(() => { copyBtn.textContent = 'Zkopírováno'; setTimeout(() => { copyBtn.textContent = 'Kopírovat odkaz'; }, 2000); });
-            });
-          }
-          renderUzivatele();
-        } catch (e) {
-          msgEl.innerHTML = '<p class="text-sm text-red-600">Chyba připojení.</p>';
-          msgEl.classList.remove('hidden');
-        }
-      };
+      wrap.innerHTML = '<p class="text-slate-500 text-sm">Chyba: ' + (e && e.message ? e.message : 'připojení k Supabase') + '.</p>';
     }
   }
 
@@ -2561,25 +2496,34 @@ Vrať JEN JSON, žádný markdown, žádné vysvětlení.`;
 
   const COLUMNS_RESET_MIGRATION_KEY = 'hr_columns_reset_v1';
   async function init() {
-    let meRes;
+    // Autentizace přes Supabase
+    if (!supabaseClient) {
+      window.location.href = 'login.html';
+      return;
+    }
     try {
-      meRes = await apiGet('/api/auth/me');
+      const { data: authData, error } = await supabaseClient.auth.getUser();
+      if (error || !authData.user) {
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+        return;
+      }
+      const userId = authData.user.id;
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('email, role')
+        .eq('id', userId)
+        .single();
+      currentUser = {
+        id: userId,
+        email: profile?.email || authData.user.email,
+        role: profile?.role || 'viewer',
+      };
+      localStorage.setItem('user', JSON.stringify(currentUser));
     } catch (e) {
-      localStorage.removeItem('sessionToken');
       localStorage.removeItem('user');
       window.location.href = 'login.html';
       return;
-    }
-    if (meRes.status === 401) {
-      localStorage.removeItem('sessionToken');
-      localStorage.removeItem('user');
-      window.location.href = 'login.html';
-      return;
-    }
-    if (meRes.ok) {
-      const data = await meRes.json().catch(() => ({}));
-      currentUser = data.user || JSON.parse(localStorage.getItem('user') || 'null');
-      if (currentUser) localStorage.setItem('user', JSON.stringify(currentUser));
     }
     applyRoleVisibility();
     initAuthUI();
