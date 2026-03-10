@@ -655,7 +655,7 @@
       placeholder: 'Popis role, očekávání, benefity, průběh pohovoru. Použijte nadpisy, tučné písmo, odrážky, zarovnání.',
       modules: {
         toolbar: [
-          [{ header: 1 }, { header: 2 }, { header: 3 }],
+          [{ header: [1, 2, 3, false] }],
           ['bold', 'italic', 'underline'],
           [{ list: 'ordered' }, { list: 'bullet' }],
           [{ align: [] }],
@@ -677,6 +677,7 @@
     const statusSelect = document.getElementById('opening-status');
     const skillsInput = document.getElementById('opening-required-skills');
     const softwareInput = document.getElementById('opening-required-software');
+    const collaborationTypeSelect = document.getElementById('opening-collaboration-type');
     fillPositionSelect(posSelect, false);
     const quill = ensureOpeningQuill();
     if (id) {
@@ -688,6 +689,7 @@
       posSelect.value = o.positionId || '';
       locInput.value = o.location || '';
       workloadSelect.value = o.workload || '';
+      if (collaborationTypeSelect) collaborationTypeSelect.value = o.collaborationType || '';
       statusSelect.value = o.status || 'aktivni';
       if (quill) {
         if (o.description && String(o.description).trim().indexOf('<') !== -1) quill.clipboard.dangerouslyPasteHTML(o.description);
@@ -703,6 +705,7 @@
       posSelect.value = positions[0] ? positions[0].id : '';
       locInput.value = '';
       workloadSelect.value = '';
+      if (collaborationTypeSelect) collaborationTypeSelect.value = '';
       statusSelect.value = 'aktivni';
       if (quill) quill.setText('');
       skillsInput.value = '';
@@ -727,6 +730,7 @@
       positionId,
       location: document.getElementById('opening-location').value.trim(),
       workload: document.getElementById('opening-workload').value.trim() || null,
+      collaborationType: document.getElementById('opening-collaboration-type').value.trim() || null,
       status: document.getElementById('opening-status').value || 'aktivni',
       description: descHtml,
       requiredSkills: document.getElementById('opening-required-skills').value.trim() || null,
@@ -1807,6 +1811,7 @@
       phone: app.phone || '', linkedin: app.linkedin || '', positionId: posId,
       openingId: app.openingId || null,
       startDate: app.startDate || '',
+      contract: app.contract || '',
       stage: targetStage, source: 'Job stránka',
       notes: 'Přihláška z webu' + (app.message ? '\n\n' + app.message : ''),
       cvFiles
@@ -2570,7 +2575,7 @@
 
   document.querySelectorAll('.modal-backdrop, .modal-close').forEach(el => {
     el.addEventListener('click', (e) => {
-      if (e.target.closest && e.target.closest('.ql-picker')) return;
+      if (e.target.closest && (e.target.closest('#opening-description-editor') || e.target.closest('.ql-picker') || e.target.closest('.ql-picker-options'))) return;
       document.querySelectorAll('.modal').forEach(m => { m.classList.remove('modal-open'); m.setAttribute('aria-hidden', 'true'); });
     });
   });

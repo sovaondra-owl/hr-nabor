@@ -64,6 +64,9 @@
     if (opening.workload && opening.workload.trim()) {
       parts.push(`<div class="job-detail-meta-item"><strong>Úvazek</strong><span>${escapeHtml(opening.workload)}</span></div>`);
     }
+    if (opening.collaborationType && opening.collaborationType.trim()) {
+      parts.push(`<div class="job-detail-meta-item"><strong>Typ spolupráce</strong><span>${escapeHtml(opening.collaborationType)}</span></div>`);
+    }
     if (opening.requiredSkills && opening.requiredSkills.trim()) {
       const tags = opening.requiredSkills.split(/[,;]/).map(s => s.trim()).filter(Boolean);
       parts.push(`<div class="job-detail-meta-item"><strong>Požadované znalosti</strong><div class="job-detail-tags">${tags.map(t => `<span class="job-detail-tag">${escapeHtml(t)}</span>`).join('')}</div></div>`);
@@ -132,7 +135,7 @@
     });
   }
 
-  function showApplyForm(openingId, positionId, positionName) {
+  function showApplyForm(openingId, positionId, positionName, opening) {
     positionsSection.hidden = true;
     detailSection.hidden = true;
     successSection.hidden = true;
@@ -144,13 +147,18 @@
     form.reset();
     applicationPositionIdEl.value = positionId || '';
     applicationOpeningIdEl.value = openingId || '';
+    const contractEl = document.getElementById('app-contract');
+    if (contractEl && opening && opening.collaborationType) {
+      const v = opening.collaborationType.trim();
+      contractEl.value = (v === 'HPP/IČO') ? 'IČO/HPP' : v;
+    }
     updateDropzoneLabels();
   }
 
   document.getElementById('job-detail-apply-btn').addEventListener('click', () => {
     if (!currentOpening) return;
     const name = currentOpening.title || (allPositions.find(p => p.id === currentOpening.positionId) || {}).name || 'Pozice';
-    showApplyForm(currentOpening.id, currentOpening.positionId, name);
+    showApplyForm(currentOpening.id, currentOpening.positionId, name, currentOpening);
   });
 
   document.getElementById('job-detail-back').addEventListener('click', (e) => {
@@ -262,6 +270,9 @@
     const startDateEl = document.getElementById('app-start-date');
     const startDate = startDateEl && startDateEl.value ? startDateEl.value.trim() : '';
 
+    const contractEl = document.getElementById('app-contract');
+    const contract = contractEl && contractEl.value ? contractEl.value.trim() : '';
+
     const application = {
       positionId,
       openingId: applicationOpeningIdEl.value || null,
@@ -271,6 +282,7 @@
       phone: document.getElementById('app-phone').value.trim(),
       linkedin: document.getElementById('app-linkedin').value.trim(),
       startDate: startDate || null,
+      contract: contract || null,
       message: document.getElementById('app-message').value.trim(),
       files
     };

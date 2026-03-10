@@ -110,6 +110,7 @@ CREATE TABLE IF NOT EXISTS openings (
   workload TEXT,
   required_skills TEXT,
   required_software TEXT,
+  collaboration_type TEXT,
   opened_at DATE,
   public_slug TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -119,6 +120,7 @@ CREATE TABLE IF NOT EXISTS openings (
 ALTER TABLE openings ADD COLUMN IF NOT EXISTS workload TEXT;
 ALTER TABLE openings ADD COLUMN IF NOT EXISTS required_skills TEXT;
 ALTER TABLE openings ADD COLUMN IF NOT EXISTS required_software TEXT;
+ALTER TABLE openings ADD COLUMN IF NOT EXISTS collaboration_type TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_openings_status ON openings(status);
 CREATE INDEX IF NOT EXISTS idx_openings_public_slug ON openings(public_slug);
@@ -206,6 +208,7 @@ CREATE TABLE IF NOT EXISTS applications (
 );
 
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS start_date TEXT;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS contract TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_applications_opening_id ON applications(opening_id);
 CREATE INDEX IF NOT EXISTS idx_applications_created_at ON applications(created_at);
