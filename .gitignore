@@ -1,0 +1,9 @@
+node_modules/
+server/node_modules/
+server/hr-auth.db
+.env
+.env.local
+*.env
+.DS_Store
+.idea/
+*.log

@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HR Nábor | Kofein</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden antialiased">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white border-r border-slate-100 flex flex-col h-full shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] z-10 flex-shrink-0">
+    <div class="p-6 flex items-center gap-3">
+      <div class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold p-2 rounded-xl text-sm shadow-md">HR</div>
+      <span class="font-bold text-xl tracking-tight text-slate-900">Nábor</span>
+    </div>
+    <nav class="flex-1 px-3 space-y-0.5 mt-1">
+      <a href="#dashboard" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative" data-view="dashboard">
+        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-md sidebar-active-bar opacity-0"></div>
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+        <span class="font-medium text-sm">Dashboard</span>
+      </a>
+      <a href="#nabor" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative" data-view="nabor">
+        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-md sidebar-active-bar opacity-0"></div>
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 6h18M5 10h10M5 14h6M5 18h4M15 11l2 2 4-4"/></svg>
+        <span class="font-medium text-sm">Aktivní nábor</span>
+      </a>
+      <a href="#kandidati" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative" data-view="kandidati">
+        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-md sidebar-active-bar opacity-0"></div>
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span class="font-medium text-sm">Kandidáti</span>
+      </a>
+      <a href="#vyhledavani" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative" data-view="vyhledavani">
+        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-md sidebar-active-bar opacity-0"></div>
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <span class="font-medium text-sm">Vyhledávání</span>
+      </a>
+      <a href="#prihlasky" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative" data-view="prihlasky">
+        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-md sidebar-active-bar opacity-0"></div>
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        <span class="font-medium text-sm">Přihlášky</span>
+      </a>
+      <a href="#import" class="sidebar-link auth-import-export flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative" data-view="import">
+        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-md sidebar-active-bar opacity-0"></div>
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        <span class="font-medium text-sm">Import</span>
+      </a>
+      <a href="#export" class="sidebar-link auth-import-export flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative" data-view="export">
+        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-md sidebar-active-bar opacity-0"></div>
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l4 4m0 0l4-4m-4 4V4"/></svg>
+        <span class="font-medium text-sm">Google Sheets</span>
+      </a>
+      <a href="#uzivatele" class="sidebar-link auth-admin-only flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative" data-view="uzivatele">
+        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-md sidebar-active-bar opacity-0"></div>
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <span class="font-medium text-sm">Uživatelé</span>
+      </a>
+    </nav>
+    <div class="px-3 py-4 border-t border-slate-100 space-y-2">
+      <div class="px-3 py-2 flex items-center justify-between gap-2">
+        <span id="auth-user-email" class="text-xs text-slate-500 truncate"></span>
+        <button type="button" id="auth-logout" class="text-xs text-indigo-600 hover:text-indigo-700 font-medium shrink-0">Odhlásit</button>
+      </div>
+      <a href="job-page.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 transition-colors" target="_blank">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        <span class="font-medium text-sm">Job stránka</span>
+      </a>
+      <button type="button" class="sidebar-link auth-positions flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors w-full justify-between" data-view="pozice">
+        <span class="flex items-center gap-2">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11.983 4a2 2 0 011.962 1.598l.149.894a1 1 0 00.627.756l.518.173a2 2 0 011.12.966l.06.12a2 2 0 01-.217 2.048l-.522.783a1 1 0 000 1.11l.522.783a2 2 0 01.217 2.048l-.06.12a2 2 0 01-1.12.966l-.518.173a1 1 0 00-.627.756l-.149.894A2 2 0 0111.983 20h-.966a2 2 0 01-1.962-1.598l-.149-.894a1 1 0 00-.627-.756l-.518-.173a2 2 0 01-1.12-.966l-.06-.12a2 2 0 01.217-2.048l.522-.783a1 1 0 000-1.11l-.522-.783a2 2 0 01-.217-2.048l.06-.12a2 2 0 011.12-.966l.518-.173a1 1 0 00.627-.756l.149-.894A2 2 0 0111.017 4h.966zM12 9a3 3 0 100 6 3 3 0 000-6z"/></svg>
+          <span class="font-medium text-sm">Nastavení pozic</span>
+        </span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 flex flex-col h-full overflow-hidden">
+
+    <!-- Dashboard -->
+    <section id="dashboard" class="view view-active flex-1 overflow-y-auto" style="display:flex">
+      <div class="p-8">
+        <h1 class="text-3xl font-bold text-slate-900">Dashboard</h1>
+        <p class="text-sm text-slate-500 mt-1 mb-6">Přehled náboru a pipeline</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-2 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-emerald-400/50"></div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Otevřené pozice</p>
+            <p class="text-5xl font-extrabold text-slate-950" id="stat-open-positions">0</p>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-2 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-indigo-400/50"></div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Celkem kandidátů</p>
+            <p class="text-5xl font-extrabold text-slate-950" id="stat-total-candidates">0</p>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-2 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-amber-400/50"></div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Nové přihlášky</p>
+            <p class="text-5xl font-extrabold text-slate-950" id="stat-new-applications">0</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-6">
+          <p class="text-sm font-semibold text-slate-800 mb-4">Pipeline podle fáze</p>
+          <div class="flex flex-wrap gap-2.5" id="pipeline-summary"></div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
+          <p class="text-sm font-semibold text-slate-800 mb-4">Kandidáti podle pozice</p>
+          <div class="flex flex-wrap gap-2.5" id="position-summary"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Kandidáti -->
+    <section id="kandidati" class="view flex-1 overflow-hidden min-h-0" style="display:none">
+      <div class="p-8 pt-0 flex-1 flex flex-col min-h-0">
+        <div class="flex justify-between items-end mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Kandidáti</h2>
+            <p class="text-sm text-slate-500 mt-1">Správa kandidátů a pipeline</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex bg-slate-100 rounded-lg p-0.5" role="tablist">
+              <button type="button" class="view-toggle-btn active px-3.5 py-1.5 text-sm font-medium rounded-md transition-all" data-view-mode="table" aria-pressed="true">Tabulka</button>
+              <button type="button" class="view-toggle-btn px-3.5 py-1.5 text-sm font-medium rounded-md transition-all" data-view-mode="pipeline" aria-pressed="false">Pipeline</button>
+            </div>
+            <button type="button" class="auth-no-viewer bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-sm flex items-center gap-1.5" id="btn-add-from-screenshot">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+              Ze screenshotu
+            </button>
+            <button type="button" class="auth-no-viewer bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-[0_4px_14px_0_rgba(99,102,241,0.39)] hover:shadow-[0_6px_20px_rgba(99,102,241,0.23)] hover:-translate-y-0.5 flex items-center gap-2" id="btn-add-candidate">
+              <span class="text-lg leading-none">+</span> Přidat kandidáta
+            </button>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-wrap gap-3 items-center mb-6">
+          <div class="relative flex-1 min-w-[200px]">
+            <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="search" id="search-candidates" class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-inner transition-all" placeholder="Hledat kandidáty…">
+          </div>
+          <select id="filter-position" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"><option value="">Všechny pozice</option></select>
+          <select id="filter-opening" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"><option value="">Všechna výběrová řízení</option></select>
+          <select id="filter-stage" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"><option value="">Všechny fáze</option></select>
+          <div class="columns-toggle-wrap relative">
+            <button type="button" class="px-3 py-2 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20" id="btn-toggle-columns">Sloupce ▾</button>
+            <div class="columns-dropdown absolute right-0 top-full mt-1 bg-white border border-slate-100 rounded-xl shadow-lg py-2 z-50 min-w-[220px] max-h-[360px] overflow-y-auto" id="columns-dropdown" hidden></div>
+          </div>
+        </div>
+
+        <div class="candidates-view-content flex-1 min-h-0 flex flex-col">
+          <div class="candidates-view-pane flex-1 min-h-0 flex flex-col" id="candidates-table-container" data-pane="table">
+            <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto" id="candidates-table-wrap" title="Tabulku lze posouvat do strany pro zobrazení dalších sloupců.">
+              <div class="bg-white rounded-xl shadow-sm border border-slate-100 inline-block min-w-full">
+                <table class="w-full min-w-[1200px]" id="candidates-table">
+                  <thead id="candidates-thead" class="sticky top-0 z-10 bg-slate-50"></thead>
+                  <tbody id="candidates-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+            <p class="text-xs text-slate-400 mt-1 px-1 shrink-0">Pro zobrazení telefonu, IČO, e-mailu a dalších sloupců posuňte tabulku do strany.</p>
+          </div>
+          <div class="candidates-view-pane flex-1 min-h-0 flex flex-col overflow-hidden" id="candidates-pipeline-wrap" data-pane="pipeline" hidden>
+            <div class="flex-1 min-h-0 overflow-x-auto overflow-y-hidden p-6 bg-slate-50/50" id="pipeline-board-wrap">
+              <div class="flex gap-6 items-stretch min-h-full" id="pipeline-board"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vyhledávání kandidátů (Soft UI, dvousloupcový layout) -->
+    <section id="vyhledavani" class="view flex-1 overflow-y-auto bg-slate-50" style="display:none">
+      <div class="max-w-7xl mx-auto px-6 py-8 flex gap-8 items-start">
+        <aside class="w-80 shrink-0 sticky top-8">
+          <div class="mb-6">
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Filtrování</h1>
+            <p class="text-sm text-slate-500 mt-1">Najděte přesně toho, koho hledáte.</p>
+          </div>
+          <div class="bg-white rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 p-6">
+            <div class="mb-6">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Pozice</label>
+              <div class="relative">
+                <select id="search-filter-position" class="w-full appearance-none px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors cursor-pointer">
+                  <option value="">Všechny pozice</option>
+                </select>
+                <svg class="w-5 h-5 absolute right-3 top-3 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
+            </div>
+            <div class="mb-6">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Stáří zájmu</label>
+              <div class="relative">
+                <select id="search-filter-age" class="w-full appearance-none px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors cursor-pointer">
+                  <option value="">Všechny</option>
+                  <option value="7">Za posledních 7 dní</option>
+                  <option value="30">Za posledních 30 dní</option>
+                  <option value="90">Za posledních 90 dní</option>
+                  <option value="90-">Starší než 3 měsíce</option>
+                  <option value="180-">Starší než 6 měsíců</option>
+                  <option value="365-">Starší než 1 rok</option>
+                </select>
+                <svg class="w-5 h-5 absolute right-3 top-3 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
+            </div>
+            <hr class="border-slate-100 mb-6">
+            <div class="mb-8">
+              <div class="flex justify-between items-end mb-4">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Plat (Kč)</label>
+              </div>
+              <div id="search-salary-slider-track" class="relative w-full h-1.5 bg-slate-200 rounded-full mb-6 select-none">
+                <div id="search-salary-slider-fill" class="absolute h-full bg-cyan-500 rounded-full pointer-events-none" style="left: 0%; right: 100%;"></div>
+                <input type="range" id="search-range-min" min="0" max="150" value="0" class="absolute w-full h-3 top-1/2 -translate-y-1/2 opacity-0 cursor-grab z-10">
+                <input type="range" id="search-range-max" min="0" max="150" value="150" class="absolute w-full h-3 top-1/2 -translate-y-1/2 opacity-0 cursor-grab z-10">
+                <div id="search-thumb-min" class="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-cyan-500 rounded-full shadow pointer-events-none z-0" style="left: 0%; transform: translate(-50%, -50%);"></div>
+                <div id="search-thumb-max" class="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-cyan-500 rounded-full shadow pointer-events-none z-0" style="left: 100%; transform: translate(-50%, -50%);"></div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="relative flex-1">
+                  <span class="absolute left-3 top-2.5 text-xs font-semibold text-slate-400">Od</span>
+                  <input type="number" id="search-salary-min" placeholder="0" min="0" step="1000" class="w-full text-right px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors">
+                </div>
+                <span class="text-slate-300">–</span>
+                <div class="relative flex-1">
+                  <span class="absolute left-3 top-2.5 text-xs font-semibold text-slate-400">Do</span>
+                  <input type="number" id="search-salary-max" placeholder="150 000" min="0" step="1000" class="w-full text-right px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors">
+                </div>
+              </div>
+              <p class="text-xs text-slate-400 mt-2">Prázdné = bez omezení. U kandidáta se bere první číslo z pole plat.</p>
+            </div>
+            <button type="button" id="search-btn-run" class="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-700 text-white font-bold rounded-xl shadow-[0_4px_14px_0_rgba(6,182,212,0.39)] hover:shadow-[0_6px_20px_rgba(6,182,212,0.35)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
+              Aplikovat filtry
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            </button>
+          </div>
+        </aside>
+        <main class="flex-1 min-w-0">
+          <div class="mb-6 flex justify-between items-end">
+            <h2 class="text-xl font-bold text-slate-800">Výsledky hledání <span id="search-results-count" class="text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-md text-sm ml-2">0</span></h2>
+          </div>
+          <div id="search-results-list" class="space-y-3">
+            <!-- vyplní JS -->
+          </div>
+        </main>
+      </div>
+    </section>
+
+    <!-- Aktivní nábor / výběrová řízení -->
+    <section id="nabor" class="view flex-1 overflow-y-auto" style="display:none">
+      <header class="px-8 pt-8 pb-4 flex justify-between items-end flex-wrap gap-4">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">Aktivní nábor</h1>
+          <p class="text-sm text-slate-500 mt-1">Výběrová řízení s vlastní job stránkou a přehledem kandidátů.</p>
+        </div>
+        <button type="button" class="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-[0_4px_14px_0_rgba(99,102,241,0.39)] hover:shadow-[0_6px_20px_rgba(99,102,241,0.23)] hover:-translate-y-0.5 flex items-center gap-2" id="btn-add-opening">
+          <span class="text-lg leading-none">+</span> Založit výběrové řízení
+        </button>
+      </header>
+      <div class="px-8 pb-8 space-y-4">
+        <div class="flex flex-wrap items-center gap-3 mb-2">
+          <select id="filter-openings-status" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+            <option value="aktivni">Aktivní</option>
+            <option value="vse">Všechny</option>
+            <option value="ukonceno">Ukončené</option>
+          </select>
+        </div>
+        <div id="opening-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- Pozice (nastavení slovníku pozic) -->
+    <section id="pozice" class="view flex-1 overflow-y-auto" style="display:none">
+      <header class="px-8 pt-8 pb-4 flex justify-between items-end flex-wrap gap-4">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">Pozice</h1>
+          <p class="text-sm text-slate-500 mt-1">Nastavení názvů a slučování pozic pro kandidáty</p>
+        </div>
+        <button type="button" class="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-[0_4px_14px_0_rgba(99,102,241,0.39)] hover:shadow-[0_6px_20px_rgba(99,102,241,0.23)] hover:-translate-y-0.5 flex items-center gap-2" id="btn-add-position">
+          <span class="text-lg leading-none">+</span> Přidat pozici
+        </button>
+      </header>
+      <div class="px-8 pb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="position-list"></div>
+    </section>
+
+    <!-- Přihlášky z webu -->
+    <section id="prihlasky" class="view flex-1 overflow-y-auto" style="display:none">
+      <header class="px-8 pt-8 pb-4">
+        <h1 class="text-2xl font-bold text-slate-900">Přihlášky z webu</h1>
+        <p class="text-sm text-slate-500 mt-1">Přihlášky z kariérní stránky</p>
+      </header>
+      <div class="px-8 pb-8">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-slate-50/80">
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Datum</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Kandidát</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Pozice</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Kontakt</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Soubory</th>
+                <th class="px-5 py-3"></th>
+              </tr>
+            </thead>
+            <tbody id="applications-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Import -->
+    <section id="import" class="view flex-1 overflow-y-auto" style="display:none">
+      <header class="px-8 pt-8 pb-2">
+        <h1 class="text-2xl font-bold text-slate-900">Import dat</h1>
+        <p class="text-sm text-slate-500 mt-1">Nahrajte XLS, XLSX nebo CSV soubor</p>
+      </header>
+      <div class="px-8 py-6 space-y-5 max-w-3xl">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+          <h2 class="text-sm font-semibold text-slate-700 mb-1">1. Vyberte soubor</h2>
+          <p class="text-sm text-slate-500 mb-4">Podporované formáty: <strong class="font-medium text-slate-600">.xlsx</strong>, <strong class="font-medium text-slate-600">.xls</strong>, <strong class="font-medium text-slate-600">.csv</strong></p>
+          <div class="flex flex-wrap gap-3 items-center mb-4">
+            <a href="#" id="btn-download-import-template" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-indigo-200 transition-colors">
+              <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Stáhnout šablonu XLS
+            </a>
+          </div>
+          <div class="file-drop flex flex-col items-center justify-center gap-2 p-8 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer transition-all hover:border-indigo-400 hover:bg-indigo-50/30 text-center" id="file-drop">
+            <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            <span class="text-sm font-medium text-slate-600">Přetáhněte soubor sem nebo klikněte pro výběr</span>
+            <span class="text-xs text-slate-400">.xlsx, .xls, .csv</span>
+            <input type="file" id="import-file" accept=".csv,.xls,.xlsx" hidden>
+          </div>
+          <div class="mt-3 px-4 py-3 bg-slate-50 rounded-lg text-sm flex items-center justify-between gap-4" id="import-file-info" hidden></div>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100" id="import-sheet-panel" hidden>
+          <h2 class="text-sm font-semibold text-slate-700 mb-1">2. Vyberte list</h2>
+          <p class="text-sm text-slate-500 mb-4">Excel obsahuje více listů. Vyberte, které chcete importovat.</p>
+          <div id="import-sheet-list"></div>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100" id="import-preview-panel" hidden>
+          <h2 class="text-sm font-semibold text-slate-700 mb-1">3. Náhled a import</h2>
+          <p class="text-sm text-slate-500 mb-4" id="import-preview-desc"></p>
+          <div id="import-mapping-container" class="mb-4"></div>
+          <div class="rounded-lg border border-slate-100 overflow-auto max-h-[300px] mb-4">
+            <table class="w-full text-sm" id="import-preview-table"></table>
+          </div>
+          <div class="flex gap-3 flex-wrap mb-2">
+            <button type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-[0_2px_10px_-3px_rgba(79,70,229,0.5)]" id="btn-import-merge">Spustit chytrý import</button>
+          </div>
+          <div class="mt-3 p-4 bg-slate-50 rounded-lg text-sm text-slate-600 border border-slate-100" id="import-log" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Export do Google Sheets -->
+    <section id="export" class="view flex-1 overflow-y-auto" style="display:none">
+      <header class="px-8 pt-8 pb-2">
+        <h1 class="text-2xl font-bold text-slate-900">Export do Google Sheets</h1>
+        <p class="text-sm text-slate-500 mt-1">Propojení s Google tabulkou</p>
+      </header>
+      <div class="px-8 py-6 space-y-5 max-w-3xl">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+          <h2 class="text-sm font-semibold text-slate-700 mb-4">1. Příprava Google Sheetu</h2>
+          <div class="space-y-5">
+            <div class="flex gap-3.5">
+              <div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">A</div>
+              <p class="text-sm text-slate-600 leading-relaxed">Otevřete svůj Google Sheet a v menu zvolte <strong class="font-medium text-slate-800">Rozšíření → Apps Script</strong>.</p>
+            </div>
+            <div class="flex gap-3.5">
+              <div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">B</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-slate-600 mb-2">Smažte veškerý obsah editoru a vložte tento kód:</p>
+                <div class="relative">
+                  <pre class="bg-slate-900 text-slate-200 p-4 rounded-lg text-xs leading-relaxed overflow-x-auto font-mono" id="apps-script-code">function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+  var mode = data.mode || "replace";
+  var headers = data.headers || [];
+  var rows = data.rows || [];
+
+  if (rows.length === 0 && mode !== "update") {
+    return ContentService.createTextOutput(JSON.stringify({ status: "ok", count: 0 })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (mode === "replace") {
+    if (headers.length > 0) {
+      sheet.clear();
+      sheet.appendRow(headers);
+    }
+    rows.forEach(function(row) { sheet.appendRow(row); });
+    return ContentService.createTextOutput(JSON.stringify({ status: "ok", count: rows.length })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (mode === "update") {
+    var lastRow = sheet.getLastRow();
+    var idCol = 1;
+    var existingById = {};
+    if (lastRow >= 2) {
+      var idRange = sheet.getRange(2, idCol, lastRow, idCol);
+      var ids = idRange.getValues();
+      for (var i = 0; i < ids.length; i++) { existingById[String(ids[i][0])] = i + 2; }
+    } else {
+      sheet.clear();
+      if (headers.length > 0) sheet.appendRow(headers);
+    }
+    var updated = 0, appended = 0;
+    rows.forEach(function(row) {
+      var id = row[0] != null ? String(row[0]) : "";
+      if (existingById[id]) {
+        var r = existingById[id];
+        for (var c = 0; c < row.length; c++) sheet.getRange(r, c + 1).setValue(row[c] != null ? row[c] : "");
+        updated++;
+      } else {
+        sheet.appendRow(row);
+        appended++;
+      }
+    });
+    return ContentService.createTextOutput(JSON.stringify({ status: "ok", updated: updated, appended: appended })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({ status: "ok", count: rows.length })).setMimeType(ContentService.MimeType.JSON);
+}</pre>
+                  <button type="button" class="absolute top-2 right-2 bg-white/10 hover:bg-white/20 text-slate-300 border border-white/10 px-2.5 py-1 rounded-md text-xs font-medium transition-colors" id="btn-copy-script">Kopírovat kód</button>
+                </div>
+              </div>
+            </div>
+            <div class="flex gap-3.5">
+              <div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">C</div>
+              <div class="text-sm text-slate-600 leading-relaxed">
+                <p>Klikněte na <strong class="font-medium text-slate-800">Nasadit → Nové nasazení</strong>. Vyberte typ <strong class="font-medium text-slate-800">„Webová aplikace"</strong>.</p>
+                <p class="mt-1">Nastavte: <em>Spouštět jako</em> = Já, <em>Kdo má přístup</em> = <strong class="font-medium text-slate-800">Kdokoliv</strong>. Klikněte <strong class="font-medium text-slate-800">Nasadit</strong>.</p>
+              </div>
+            </div>
+            <div class="flex gap-3.5">
+              <div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">D</div>
+              <p class="text-sm text-slate-600 leading-relaxed">Zkopírujte zobrazenou <strong class="font-medium text-slate-800">URL webové aplikace</strong> a vložte ji níže.</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+          <h2 class="text-sm font-semibold text-slate-700 mb-3">2. Nastavení propojení</h2>
+          <label class="block text-sm font-medium text-slate-500 mb-1">URL webové aplikace (Apps Script)</label>
+          <input type="url" id="gsheet-url" class="w-full border border-slate-200 rounded-lg text-sm py-2 px-3 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 mb-3" placeholder="https://script.google.com/macros/s/…/exec">
+          <div class="flex items-center gap-3">
+            <button type="button" class="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm" id="btn-save-gsheet-url">Uložit URL</button>
+            <span class="text-sm text-emerald-600 font-semibold" id="gsheet-url-saved" hidden>Uloženo</span>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+          <h2 class="text-sm font-semibold text-slate-700 mb-1">3. Export kandidátů</h2>
+          <p class="text-sm text-slate-500 mb-3">Export odešle kandidáty do vašeho Google Sheetu.</p>
+          <div class="flex flex-col gap-3 mb-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="gsheet-export-mode" value="replace" class="text-indigo-600 focus:ring-indigo-500" checked>
+              <span class="text-sm font-medium text-slate-700">Přepsat celou tabulku</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="gsheet-export-mode" value="update" class="text-indigo-600 focus:ring-indigo-500">
+              <span class="text-sm font-medium text-slate-700">Aktualizovat tabulku</span>
+            </label>
+            <p class="text-xs text-slate-500 ml-6">U „Aktualizovat“ se řádky s odpovídajícím ID upraví, noví kandidáti se přidají na konec. V tabulce musí být sloupec <strong>ID</strong> (první export zvolte „Přepsat“).</p>
+          </div>
+          <div class="flex items-center gap-4 flex-wrap">
+            <button type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-[0_2px_10px_-3px_rgba(79,70,229,0.5)]" id="btn-export-gsheet">Exportovat do Google Sheets</button>
+            <span class="text-sm" id="export-status"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Uživatelé (jen admin) -->
+    <section id="uzivatele" class="view flex-1 overflow-y-auto" style="display:none">
+      <header class="px-8 pt-8 pb-2">
+        <h1 class="text-2xl font-bold text-slate-900">Uživatelé</h1>
+        <p class="text-sm text-slate-500 mt-1">Správa uživatelů a pozvánky</p>
+      </header>
+      <div class="px-8 py-6 max-w-3xl" id="uzivatele-list-wrap">
+        <p class="text-slate-500 text-sm">Načítám…</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal: Detail kandidáta (Colorful Soft UI) -->
+  <div id="modal-candidate-detail" class="modal" aria-hidden="true">
+    <div class="modal-backdrop bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="modal-content max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] bg-white">
+      <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100 flex-shrink-0">
+        <button type="button" class="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-sm font-semibold rounded-xl transition-colors" id="btn-detail-edit">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+          Upravit profil
+        </button>
+        <button type="button" class="modal-close p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors" aria-label="Zavřít">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <div class="p-8 overflow-y-auto flex-1 min-h-0" id="candidate-detail-body"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Editace kandidáta -->
+  <div id="modal-candidate" class="modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content max-w-2xl">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <h2 class="text-lg font-semibold text-slate-900" id="modal-candidate-title">Kandidát</h2>
+        <button type="button" class="modal-close text-slate-400 hover:text-slate-600 text-2xl leading-none p-1 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Zavřít">&times;</button>
+      </div>
+      <div class="px-6 py-5">
+        <input type="hidden" id="candidate-id">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <label class="block text-sm"><span class="font-medium text-slate-500">Příjmení</span><input type="text" id="candidate-surname" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Jméno</span><input type="text" id="candidate-firstname" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Zdroj</span><input type="text" id="candidate-source" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">E-mail</span><input type="email" id="candidate-email" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Telefon</span><input type="text" id="candidate-phone" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">LinkedIn</span><input type="url" id="candidate-linkedin" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="https://"></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Pozice</span><select id="candidate-position" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></select></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Fáze</span><select id="candidate-stage" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
+            <option value="novy_kandidat">Nový kandidát</option>
+            <option value="telefonat">Telefonát</option>
+            <option value="ukol">Úkol</option>
+            <option value="kolo1">1. kolo</option>
+            <option value="kolo2">2. kolo</option>
+            <option value="prijat">Přijat</option>
+            <option value="zamitnut">Zamítnut</option>
+          </select></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Pohlaví</span><select id="candidate-gender" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
+            <option value="">—</option><option value="Muž">Muž</option><option value="Žena">Žena</option>
+          </select></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Plat</span><input type="text" id="candidate-salary" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Měna</span><select id="candidate-salaryCurrency" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
+            <option value="CZK">CZK</option><option value="EUR">EUR</option><option value="USD">USD</option>
+          </select></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">HPP / IČO</span><input type="text" id="candidate-contract" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Pozn. ke mzdě</span><input type="text" id="candidate-salaryNote" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Datum nástupu</span><input type="text" id="candidate-startDate" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="např. 6.4.2026"></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Jazyky</span><input type="text" id="candidate-languages" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="Angličtina B2, Němčina A1"></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Potenciál</span><select id="candidate-potential" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
+            <option value="">—</option><option value="Perspektivní">Perspektivní</option><option value="Průměrný">Průměrný</option><option value="Nevhodný">Nevhodný</option>
+          </select></label>
+        </div>
+        <hr class="my-5 border-slate-100">
+        <div class="space-y-4">
+          <label class="block text-sm"><span class="font-medium text-slate-500">První interakce</span><textarea id="candidate-prvniInterakce" rows="2" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y"></textarea></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Poznámky</span><textarea id="candidate-notes" rows="4" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y"></textarea></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">1. kolo</span><textarea id="candidate-kolo1" rows="3" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y"></textarea></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Úkol</span><textarea id="candidate-ukol" rows="2" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y"></textarea></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">2. kolo</span><textarea id="candidate-kolo2" rows="3" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y"></textarea></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">3. kolo</span><textarea id="candidate-kolo3" rows="2" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y"></textarea></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Důvod odmítnutí</span><textarea id="candidate-rejectionReason" rows="2" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y"></textarea></label>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
+        <button type="button" class="modal-close bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">Zrušit</button>
+        <button type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-[0_2px_10px_-3px_rgba(79,70,229,0.5)]" id="btn-save-candidate">Uložit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Pozice -->
+  <div id="modal-position" class="modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content max-w-md">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <h2 class="text-lg font-semibold text-slate-900" id="modal-position-title">Pozice</h2>
+        <button type="button" class="modal-close text-slate-400 hover:text-slate-600 text-2xl leading-none p-1 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Zavřít">&times;</button>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <input type="hidden" id="position-id">
+        <label class="block text-sm"><span class="font-medium text-slate-500">Název</span><input type="text" id="position-name" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+        <label class="block text-sm"><span class="font-medium text-slate-500">Stav</span><select id="position-status" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
+          <option value="otevreno">Otevřeno</option>
+          <option value="uzavreno">Uzavřeno</option>
+        </select></label>
+        <label class="block text-sm"><span class="font-medium text-slate-500">Poznámka</span><textarea id="position-notes" rows="3" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y"></textarea></label>
+      </div>
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
+        <button type="button" class="modal-close bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">Zrušit</button>
+        <button type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-[0_2px_10px_-3px_rgba(79,70,229,0.5)]" id="btn-save-position">Uložit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Sloučit pozice -->
+  <div id="modal-position-merge" class="modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content max-w-md">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <h2 class="text-lg font-semibold text-slate-900">Sloučit pozice</h2>
+        <button type="button" class="modal-close text-slate-400 hover:text-slate-600 text-2xl leading-none p-1 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Zavřít">&times;</button>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <input type="hidden" id="merge-from-id">
+        <p class="text-sm text-slate-600" id="merge-from-label"></p>
+        <label class="block text-sm">
+          <span class="font-medium text-slate-500">Cílová pozice</span>
+          <select id="merge-target-id" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></select>
+        </label>
+        <p class="text-xs text-slate-500 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+          Všichni kandidáti a přihlášky z původní pozice budou přesunuti na vybranou pozici. Původní název zůstane uložen jako alias pro budoucí importy.
+        </p>
+      </div>
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
+        <button type="button" class="modal-close bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">Zrušit</button>
+        <button type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-[0_2px_10px_-3px_rgba(79,70,229,0.5)]" id="btn-merge-position-confirm">Sloučit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Přihláška (moderní, bez posuvníků) -->
+  <div id="modal-application" class="modal" aria-hidden="true">
+    <div class="modal-backdrop bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="modal-content max-w-xl w-full overflow-visible rounded-2xl shadow-2xl border-0 bg-white flex flex-col">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0">
+        <h2 class="text-lg font-semibold text-slate-900">Přihláška z webu</h2>
+        <button type="button" class="modal-close p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors" aria-label="Zavřít">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="px-6 py-5 overflow-visible flex-1 min-h-0" id="application-detail-body"></div>
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 flex-shrink-0 bg-slate-50/50 rounded-b-2xl">
+        <button type="button" class="modal-close bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm">Zavřít</button>
+        <button type="button" class="bg-white border border-red-200 text-red-600 hover:bg-red-50 px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-sm" id="btn-application-reject">Odmítnout</button>
+        <button type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-[0_2px_10px_-3px_rgba(79,70,229,0.5)]" id="btn-application-accept">Schválit na telefonát</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Rychlá editace poznámek -->
+  <div id="modal-notes" class="modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content max-w-lg">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <h2 class="text-lg font-semibold text-slate-900" id="modal-notes-title">Poznámky</h2>
+        <button type="button" class="modal-close text-slate-400 hover:text-slate-600 text-2xl leading-none p-1 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Zavřít">&times;</button>
+      </div>
+      <div class="px-6 py-5">
+        <input type="hidden" id="notes-candidate-id">
+        <input type="hidden" id="notes-field-name">
+        <textarea id="notes-textarea" rows="10" class="w-full border border-slate-200 rounded-lg text-sm py-3 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y leading-relaxed"></textarea>
+      </div>
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
+        <button type="button" class="modal-close bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">Zrušit</button>
+        <button type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-[0_2px_10px_-3px_rgba(79,70,229,0.5)]" id="btn-save-notes">Uložit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Přidání ze screenshotu -->
+  <div id="modal-screenshot" class="modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content max-w-3xl">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <h2 class="text-lg font-semibold text-slate-900">Přidat kandidáta ze screenshotu</h2>
+        <button type="button" class="modal-close text-slate-400 hover:text-slate-600 text-2xl leading-none p-1 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Zavřít">&times;</button>
+      </div>
+      <div class="px-6 py-5 space-y-5">
+        <!-- API key -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">OpenAI API klíč</label>
+          <div class="flex gap-2">
+            <input type="password" id="screenshot-api-key" class="flex-1 border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="sk-...">
+            <button type="button" id="btn-toggle-key-vis" class="text-slate-400 hover:text-slate-600 px-2" title="Zobrazit/skrýt">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </button>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Klíč se ukládá lokálně v prohlížeči. Nikam se neodesílá kromě OpenAI API.</p>
+        </div>
+
+        <!-- Drop zone -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Screenshoty</label>
+          <div id="screenshot-drop" class="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center cursor-pointer transition-all hover:border-indigo-400 hover:bg-indigo-50/30">
+            <svg class="w-10 h-10 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+            <p class="text-sm text-slate-500 font-medium">Přetáhněte screenshoty, klikněte nebo vložte z&nbsp;clipboardu <span class="text-slate-400">(Ctrl+V)</span></p>
+            <p class="text-xs text-slate-400 mt-1">PNG, JPG, WebP — více screenshotů najednou</p>
+            <input type="file" id="screenshot-file-input" accept="image/*" multiple class="hidden">
+          </div>
+          <div id="screenshot-previews" class="flex flex-wrap gap-3 mt-3"></div>
+        </div>
+
+        <!-- Analyze button -->
+        <div class="flex items-center gap-3">
+          <button type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-all shadow-[0_2px_10px_-3px_rgba(79,70,229,0.5)] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" id="btn-analyze-screenshots" disabled>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Analyzovat screenshoty
+          </button>
+          <span id="screenshot-status" class="text-sm text-slate-500"></span>
+        </div>
+
+        <!-- Extracted data form (hidden until analysis) -->
+        <div id="screenshot-result" class="hidden">
+          <hr class="border-slate-100 mb-5">
+          <h3 class="text-sm font-semibold text-slate-700 mb-3">Rozpoznaná data <span class="text-slate-400 font-normal">— zkontrolujte a upravte</span></h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <label class="block text-sm"><span class="font-medium text-slate-500">Příjmení</span><input type="text" id="ss-surname" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">Jméno</span><input type="text" id="ss-firstname" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">Pohlaví</span><select id="ss-gender" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
+              <option value="">—</option><option value="Muž">Muž</option><option value="Žena">Žena</option>
+            </select></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">E-mail</span><input type="email" id="ss-email" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">Telefon</span><input type="text" id="ss-phone" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">LinkedIn</span><input type="url" id="ss-linkedin" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">Pozice</span><select id="ss-position" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></select></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">Fáze</span><select id="ss-stage" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></select></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">Zdroj</span><input type="text" id="ss-source" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">Plat</span><input type="text" id="ss-salary" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">Měna</span><select id="ss-salaryCurrency" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
+              <option value="CZK">CZK</option><option value="EUR">EUR</option><option value="USD">USD</option>
+            </select></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">HPP / IČO</span><input type="text" id="ss-contract" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">Pozn. ke mzdě</span><input type="text" id="ss-salaryNote" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">Datum nástupu</span><input type="text" id="ss-startDate" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">Jazyky</span><input type="text" id="ss-languages" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">Potenciál</span><select id="ss-potential" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
+              <option value="">—</option><option value="Perspektivní">Perspektivní</option><option value="Průměrný">Průměrný</option><option value="Nevhodný">Nevhodný</option>
+            </select></label>
+          </div>
+          <label class="block text-sm mt-3"><span class="font-medium text-slate-500">Poznámky</span><textarea id="ss-notes" rows="4" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y"></textarea></label>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
+        <button type="button" class="modal-close bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">Zrušit</button>
+        <button type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all shadow-[0_2px_10px_-3px_rgba(5,150,105,0.5)] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" id="btn-save-from-screenshot" disabled>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          Uložit kandidáta
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Výběrové řízení -->
+  <div id="modal-opening" class="modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content max-w-xl">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <h2 class="text-lg font-semibold text-slate-900" id="modal-opening-title">Výběrové řízení</h2>
+        <button type="button" class="modal-close text-slate-400 hover:text-slate-600 text-2xl leading-none p-1 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Zavřít">&times;</button>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <input type="hidden" id="opening-id">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label class="block text-sm">
+            <span class="font-medium text-slate-500">Název výběrového řízení</span>
+            <input type="text" id="opening-title" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="PPC specialista – e‑shop tým">
+          </label>
+          <label class="block text-sm">
+            <span class="font-medium text-slate-500">Pracovní pozice</span>
+            <select id="opening-position" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></select>
+          </label>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label class="block text-sm">
+            <span class="font-medium text-slate-500">Lokalita</span>
+            <input type="text" id="opening-location" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="Praha / Remote">
+          </label>
+          <label class="block text-sm">
+            <span class="font-medium text-slate-500">Stav náboru</span>
+            <select id="opening-status" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
+              <option value="aktivni">Aktivní</option>
+              <option value="ukonceno">Ukončené</option>
+            </select>
+          </label>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label class="block text-sm">
+            <span class="font-medium text-slate-500">Datum zahájení náboru</span>
+            <input type="date" id="opening-date" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
+          </label>
+        </div>
+        <label class="block text-sm">
+          <span class="font-medium text-slate-500">Popis pozice (pro job stránku)</span>
+          <textarea id="opening-description" rows="6" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y" placeholder="Stručně popište roli, očekávání a benefity."></textarea>
+        </label>
+        <p class="text-xs text-slate-500 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
+          Po uložení se vygeneruje unikátní odkaz na job stránku pro toto výběrové řízení. Přihlášky se automaticky propojí s kandidáty v tomto náboru.
+        </p>
+      </div>
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
+        <button type="button" class="modal-close bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">Zrušit</button>
+        <button type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-[0_2px_10px_-3px_rgba(79,70,229,0.5)]" id="btn-save-opening">Uložit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Konflikty při importu -->
+  <div id="modal-import-conflicts" class="modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content max-w-3xl">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <h2 class="text-lg font-semibold text-slate-900">Nalezeni kandidáti se stejným jménem</h2>
+        <button type="button" class="modal-close text-slate-400 hover:text-slate-600 text-2xl leading-none p-1 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Zavřít">&times;</button>
+      </div>
+      <div class="px-6 py-5 max-h-[420px] overflow-y-auto space-y-4" id="import-conflicts-body"></div>
+      <div class="flex justify-between items-center gap-3 px-6 py-4 border-t border-slate-100">
+        <p class="text-xs text-slate-500">U každého shodného jména vyberte, zda jde o stejného člověka (sloučit) nebo nového uchazeče.</p>
+        <div class="flex gap-3">
+          <button type="button" class="modal-close bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">Zrušit</button>
+          <button type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-[0_2px_10px_-3px_rgba(79,70,229,0.5)]" id="btn-import-conflicts-confirm">Dokončit import</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="config.js"></script>
+  <script src="db.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

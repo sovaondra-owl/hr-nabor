@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Přihlášení | HR Nábor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
+  </script>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 font-sans">
+  <div class="w-full max-w-md">
+    <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-8">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold p-2.5 rounded-xl text-sm shadow-md">HR</div>
+        <h1 class="text-xl font-bold text-slate-900">Nábor</h1>
+      </div>
+      <h2 class="text-lg font-semibold text-slate-800 mb-6">Přihlášení</h2>
+      <form id="login-form" class="space-y-5" novalidate>
+        <div>
+          <label for="email" class="block text-sm font-medium text-slate-700 mb-1.5">E-mail nebo přihlašovací jméno</label>
+          <input type="text" id="email" name="email" required autocomplete="username"
+            class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            placeholder="admin nebo vas@email.cz">
+        </div>
+        <div>
+          <label for="password" class="block text-sm font-medium text-slate-700 mb-1.5">Heslo</label>
+          <input type="password" id="password" name="password" required autocomplete="current-password"
+            class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            placeholder="••••••••">
+        </div>
+        <p id="login-error" class="text-sm text-red-600 hidden"></p>
+        <button type="submit" id="btn-submit"
+          class="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-semibold py-2.5 rounded-xl shadow-md transition-all">
+          Přihlásit se
+        </button>
+      </form>
+      <p class="mt-6 text-center">
+        <a href="reset-password.html" class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">Zapomněl jsem heslo</a>
+      </p>
+    </div>
+  </div>
+  <script src="config.js"></script>
+  <script>
+    (function () {
+      const form = document.getElementById('login-form');
+      const errEl = document.getElementById('login-error');
+      const btn = document.getElementById('btn-submit');
+      function showError(msg) {
+        errEl.textContent = msg || '';
+        errEl.classList.toggle('hidden', !msg);
+      }
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        showError('');
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        if (!email || !password) {
+          showError('Vyplňte e-mail a heslo.');
+          return;
+        }
+        btn.disabled = true;
+        try {
+          const res = await fetch(window.API_BASE + '/api/auth/login', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            showError(data.error || 'Přihlášení se nezdařilo.');
+            btn.disabled = false;
+            return;
+          }
+          if (data.sessionToken) {
+            localStorage.setItem('sessionToken', data.sessionToken);
+            localStorage.setItem('user', JSON.stringify(data.user));
+          }
+          window.location.href = 'index.html';
+        } catch (err) {
+          showError('Chyba připojení k serveru. Zkontrolujte, že API běží na ' + window.API_BASE);
+          btn.disabled = false;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

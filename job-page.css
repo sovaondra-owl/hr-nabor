@@ -1,0 +1,14 @@
+/* Job page – doplňkové styly (hlavní vzhled přes Tailwind v HTML) */
+.job-page .loading,
+.job-page .empty {
+  color: #64748b;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.job-card .line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

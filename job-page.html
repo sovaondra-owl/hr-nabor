@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kariéra | KOFEIN</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="job-page.css">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    input[type="file"] { position: absolute; width: 0; height: 0; opacity: 0; overflow: hidden; clip: rect(0,0,0,0); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col selection:bg-cyan-100 selection:text-cyan-900">
+
+  <header class="bg-white border-b border-slate-100 sticky top-0 z-10" id="job-header">
+    <div class="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Zpět do HR
+      </a>
+      <div class="flex flex-col items-center justify-center leading-none tracking-tighter">
+        <span class="text-3xl font-black text-[#003366]">KOFEI<span class="text-[#00BFFF]">N</span></span>
+        <span class="text-2xl font-black text-[#00BFFF] -mt-1 ml-5">ON</span>
+      </div>
+      <div class="w-24"></div>
+    </div>
+  </header>
+
+  <main class="flex-1 py-12 px-4 sm:px-6">
+    <!-- Výběr pozic (seznam karet) -->
+    <section id="job-positions" class="max-w-3xl mx-auto">
+      <div class="mb-10 text-center">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">Kariéra u nás</h1>
+        <p class="text-slate-500 text-lg">Vyberte pozici a pošlete nám svůj profil. Připravte si životopis a případně další dokumenty.</p>
+      </div>
+      <div id="job-cards" class="space-y-4">
+        <p class="text-slate-500 text-center py-12">Načítám pozice…</p>
+      </div>
+    </section>
+
+    <!-- Formulář přihlášky -->
+    <section id="job-apply" hidden class="max-w-3xl mx-auto">
+      <div class="mb-10 text-center">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">Přihláška na pozici: <span id="apply-position-name" class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600"></span></h1>
+        <p class="text-slate-500 text-lg">Vyplňte údaje a připojte životopis. Brzy vás budeme kontaktovat.</p>
+      </div>
+
+      <form id="application-form" class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-8 md:p-12">
+        <input type="hidden" id="application-position-id">
+        <input type="hidden" id="application-opening-id">
+
+        <div class="mb-10">
+          <h2 class="text-xl font-bold text-blue-950 border-b border-slate-100 pb-2 mb-6 flex items-center gap-3">
+            <span class="w-8 h-8 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-500 font-semibold">1</span>
+            Osobní údaje
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Příjmení *</label>
+              <input type="text" id="app-surname" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-sm">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Jméno *</label>
+              <input type="text" id="app-firstname" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-sm">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">E-mail *</label>
+              <input type="email" id="app-email" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-sm">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Telefon</label>
+              <input type="tel" id="app-phone" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-sm">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">LinkedIn profil</label>
+              <input type="url" id="app-linkedin" placeholder="https://linkedin.com/in/..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-sm placeholder:text-slate-400">
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-slate-100 mb-10">
+
+        <div class="mb-10">
+          <h2 class="text-xl font-bold text-blue-950 border-b border-slate-100 pb-2 mb-6 flex items-center gap-3">
+            <span class="w-8 h-8 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-500 font-semibold">2</span>
+            Zpráva
+          </h2>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Proč vás zajímá tato pozice a co byste nám chtěli sdělit?</label>
+            <textarea id="app-message" rows="4" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-sm resize-y"></textarea>
+          </div>
+        </div>
+
+        <hr class="border-slate-100 mb-10">
+
+        <div class="mb-10">
+          <h2 class="text-xl font-bold text-blue-950 border-b border-slate-100 pb-2 mb-2 flex items-center gap-3">
+            <span class="w-8 h-8 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-500 font-semibold">3</span>
+            Soubory pro nábor
+          </h2>
+          <p class="text-sm text-slate-500 mb-6 pl-11">Nahrajte životopis (PDF nebo DOC). Můžete přidat i další dokumenty (certifikáty, portfolio).</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pl-11">
+            <div>
+              <span class="block text-sm font-medium text-slate-700 mb-2">Životopis (CV) <span class="text-slate-400 font-normal">– nebo vyplňte LinkedIn</span></span>
+              <label class="job-dropzone flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer bg-slate-50 hover:bg-cyan-50/50 hover:border-cyan-300 transition-colors group" data-for="app-cv">
+                <div class="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none">
+                  <svg class="w-8 h-8 mb-3 text-slate-400 group-hover:text-cyan-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                  <p class="text-xs text-slate-500 font-medium job-dropzone-text">Klikněte nebo přetáhněte soubor</p>
+                </div>
+                <input type="file" id="app-cv" accept=".pdf,.doc,.docx">
+              </label>
+            </div>
+            <div>
+              <span class="block text-sm font-medium text-slate-700 mb-2">Další dokumenty (volitelné)</span>
+              <label class="job-dropzone flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer bg-slate-50 hover:bg-cyan-50/50 hover:border-cyan-300 transition-colors group" data-for="app-files-extra">
+                <div class="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none">
+                  <svg class="w-8 h-8 mb-3 text-slate-400 group-hover:text-cyan-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                  <p class="text-xs text-slate-500 font-medium job-dropzone-text">Přidat certifikát / portfolio</p>
+                </div>
+                <input type="file" id="app-files-extra" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <button type="button" id="btn-back-positions" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors w-full sm:w-auto text-center order-2 sm:order-1">
+            Zpět na výběr pozice
+          </button>
+          <button type="submit" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-700 text-white font-bold rounded-xl shadow-[0_4px_14px_0_rgba(6,182,212,0.4)] hover:shadow-[0_6px_20px_rgba(6,182,212,0.35)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 order-1 sm:order-2">
+            Odeslat přihlášku
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Úspěch -->
+    <section id="job-success" hidden class="max-w-3xl mx-auto">
+      <div class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-12 text-center">
+        <h2 class="text-2xl font-bold text-blue-950 mb-3">Přihláška odeslána</h2>
+        <p class="text-slate-600 mb-8">Děkujeme za váš zájem. Vaše přihláška byla uložena a brzy vás budeme kontaktovat.</p>
+        <a href="job-page.html" class="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-700 text-white font-bold rounded-xl shadow-[0_4px_14px_0_rgba(6,182,212,0.4)] transition-all">
+          Odeslat další přihlášku
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script src="db.js"></script>
+  <script src="job-page.js"></script>
+</body>
+</html>
