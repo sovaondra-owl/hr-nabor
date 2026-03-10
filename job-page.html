@@ -150,6 +150,12 @@
     </section>
   </main>
 
+  <!-- Supabase (anon) – job stránka načítá výběrová řízení a ukládá přihlášky do Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script>
+    window.supabaseClient = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  </script>
   <script src="db.js"></script>
   <script src="job-page.js"></script>
 </body>

@@ -57,8 +57,14 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
-// --- Positions ---
+// --- Positions (Supabase nebo IndexedDB) ---
 async function getAllPositions() {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { data, error } = await supabase.from('positions').select('*').order('name');
+    if (error) throw error;
+    return (data || []).map(positionRowToApp);
+  }
   const database = await openDB();
   return new Promise((resolve, reject) => {
     const tx = database.transaction('positions', 'readonly');
@@ -70,6 +76,15 @@ async function getAllPositions() {
 }
 
 async function getPosition(id) {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { data, error } = await supabase.from('positions').select('*').eq('id', id).single();
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
+    return positionRowToApp(data);
+  }
   const database = await openDB();
   return new Promise((resolve, reject) => {
     const tx = database.transaction('positions', 'readonly');
@@ -81,6 +96,18 @@ async function getPosition(id) {
 }
 
 async function savePosition(item) {
+  const supabase = getSupabase();
+  if (supabase) {
+    const row = positionAppToRow(item);
+    if (item.id) {
+      const { data, error } = await supabase.from('positions').update(row).eq('id', item.id).select().single();
+      if (error) throw error;
+      return positionRowToApp(data);
+    }
+    const { data, error } = await supabase.from('positions').insert(row).select().single();
+    if (error) throw error;
+    return positionRowToApp(data);
+  }
   const database = await openDB();
   const record = { ...item };
   if (!record.id) {
@@ -98,6 +125,12 @@ async function savePosition(item) {
 }
 
 async function deletePosition(id) {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { error } = await supabase.from('positions').delete().eq('id', id);
+    if (error) throw error;
+    return;
+  }
   const database = await openDB();
   return new Promise((resolve, reject) => {
     const tx = database.transaction('positions', 'readwrite');
@@ -109,6 +142,12 @@ async function deletePosition(id) {
 }
 
 async function clearAllPositions() {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { error } = await supabase.from('positions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    if (error) throw error;
+    return;
+  }
   const database = await openDB();
   return new Promise((resolve, reject) => {
     const tx = database.transaction('positions', 'readwrite');
@@ -134,8 +173,14 @@ async function clearAllCandidates() {
   });
 }
 
-// --- Openings (výběrová řízení) ---
+// --- Openings (Supabase nebo IndexedDB) ---
 async function getAllOpenings() {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { data, error } = await supabase.from('openings').select('*').order('title');
+    if (error) throw error;
+    return (data || []).map(openingRowToApp);
+  }
   const database = await openDB();
   return new Promise((resolve, reject) => {
     const tx = database.transaction('openings', 'readonly');
@@ -147,6 +192,15 @@ async function getAllOpenings() {
 }
 
 async function getOpening(id) {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { data, error } = await supabase.from('openings').select('*').eq('id', id).single();
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
+    return openingRowToApp(data);
+  }
   const database = await openDB();
   return new Promise((resolve, reject) => {
     const tx = database.transaction('openings', 'readonly');
@@ -157,7 +211,26 @@ async function getOpening(id) {
   });
 }
 
+function _openingPublicSlug(item) {
+  const base = (item.title || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'pozice';
+  return `${base}-${(item.id || generateId()).slice(-4)}`;
+}
+
 async function saveOpening(item) {
+  const supabase = getSupabase();
+  if (supabase) {
+    const toSave = { ...item };
+    if (!toSave.publicSlug) toSave.publicSlug = _openingPublicSlug(toSave);
+    const row = openingAppToRow(toSave);
+    if (item.id) {
+      const { data, error } = await supabase.from('openings').update(row).eq('id', item.id).select().single();
+      if (error) throw error;
+      return openingRowToApp(data);
+    }
+    const { data, error } = await supabase.from('openings').insert(row).select().single();
+    if (error) throw error;
+    return openingRowToApp(data);
+  }
   const database = await openDB();
   const record = { ...item };
   if (!record.id) {
@@ -179,6 +252,12 @@ async function saveOpening(item) {
 }
 
 async function deleteOpening(id) {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { error } = await supabase.from('openings').delete().eq('id', id);
+    if (error) throw error;
+    return;
+  }
   const database = await openDB();
   return new Promise((resolve, reject) => {
     const tx = database.transaction('openings', 'readwrite');
@@ -201,6 +280,7 @@ function candidateRowToApp(row) {
   return {
     id: row.id,
     positionId: row.position_id || null,
+    openingId: row.opening_id || null,
     stage: row.stage || 'nova_prihlaska',
     surname: row.surname || '',
     firstname: row.firstname || '',
@@ -227,6 +307,7 @@ function candidateAppToRow(item) {
   const now = new Date().toISOString();
   return {
     position_id: item.positionId || null,
+    opening_id: item.openingId || null,
     stage: item.stage || 'nova_prihlaska',
     surname: item.surname || null,
     firstname: item.firstname || null,
@@ -245,6 +326,99 @@ function candidateAppToRow(item) {
     rejection_reason: item.rejectionReason || null,
     watch: !!item.watch,
     updated_at: now
+  };
+}
+
+function positionRowToApp(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    name: row.name || '',
+    status: row.status || 'aktivni',
+    notes: row.notes || '',
+    mergedIntoId: row.merged_into_id || null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function positionAppToRow(item) {
+  const now = new Date().toISOString();
+  const row = {
+    name: item.name || '',
+    status: item.status || 'aktivni',
+    notes: item.notes || '',
+    merged_into_id: item.mergedIntoId || null,
+    updated_at: item.updatedAt || now,
+  };
+  if (item.id) row.id = item.id;
+  return row;
+}
+
+function openingRowToApp(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    title: row.title || '',
+    positionId: row.position_id || null,
+    location: row.location || '',
+    status: row.status || 'aktivni',
+    description: row.description || '',
+    openedAt: row.opened_at || null,
+    publicSlug: row.public_slug || null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function openingAppToRow(item) {
+  const now = new Date().toISOString();
+  const row = {
+    title: item.title || '',
+    position_id: item.positionId || null,
+    location: item.location || '',
+    status: item.status || 'aktivni',
+    description: item.description || '',
+    opened_at: item.openedAt || null,
+    public_slug: item.publicSlug || null,
+    updated_at: item.updatedAt || now,
+  };
+  if (item.id) row.id = item.id;
+  return row;
+}
+
+function applicationRowToApp(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    openingId: row.opening_id || null,
+    positionId: row.position_id || null,
+    positionName: row.position_name || null,
+    surname: row.surname || '',
+    firstname: row.firstname || '',
+    email: row.email || '',
+    phone: row.phone || '',
+    linkedin: row.linkedin || '',
+    message: row.message || '',
+    files: row.files || [],
+    convertedToCandidateId: row.converted_to_candidate_id || null,
+    createdAt: row.created_at,
+  };
+}
+
+function applicationAppToRow(item) {
+  return {
+    opening_id: item.openingId || null,
+    position_id: item.positionId || null,
+    position_name: item.positionName || null,
+    surname: item.surname || '',
+    firstname: item.firstname || '',
+    email: item.email || '',
+    phone: item.phone || '',
+    linkedin: item.linkedin || '',
+    message: item.message || '',
+    files: item.files || [],
+    converted_to_candidate_id: item.convertedToCandidateId || null,
   };
 }
 
@@ -355,8 +529,14 @@ async function deleteCandidate(id) {
   });
 }
 
-// --- Applications (from job page) ---
+// --- Applications (Supabase nebo IndexedDB) ---
 async function getAllApplications() {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { data, error } = await supabase.from('applications').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data || []).map(applicationRowToApp);
+  }
   const database = await openDB();
   return new Promise((resolve, reject) => {
     const tx = database.transaction('applications', 'readonly');
@@ -368,6 +548,15 @@ async function getAllApplications() {
 }
 
 async function getApplication(id) {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { data, error } = await supabase.from('applications').select('*').eq('id', id).single();
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
+    return applicationRowToApp(data);
+  }
   const database = await openDB();
   return new Promise((resolve, reject) => {
     const tx = database.transaction('applications', 'readonly');
@@ -379,6 +568,18 @@ async function getApplication(id) {
 }
 
 async function saveApplication(item) {
+  const supabase = getSupabase();
+  if (supabase) {
+    const row = applicationAppToRow(item);
+    if (item.id) {
+      const { data, error } = await supabase.from('applications').update(row).eq('id', item.id).select().single();
+      if (error) throw error;
+      return applicationRowToApp(data);
+    }
+    const { data, error } = await supabase.from('applications').insert(row).select().single();
+    if (error) throw error;
+    return applicationRowToApp(data);
+  }
   const database = await openDB();
   const record = { ...item };
   if (!record.id) {
@@ -395,6 +596,12 @@ async function saveApplication(item) {
 }
 
 async function deleteApplication(id) {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { error } = await supabase.from('applications').delete().eq('id', id);
+    if (error) throw error;
+    return;
+  }
   const database = await openDB();
   return new Promise((resolve, reject) => {
     const tx = database.transaction('applications', 'readwrite');
