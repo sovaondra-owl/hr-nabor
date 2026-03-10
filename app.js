@@ -2542,6 +2542,11 @@ Vrať JEN JSON, žádný markdown, žádné vysvětlení.`;
     fillPositionSelect(document.getElementById('filter-position'));
     fillPositionSelect(document.getElementById('candidate-position'));
     renderDashboard(); renderCandidates(); renderPositions(); renderApplications();
+    // Auth + UI jsou připravené – teprve teď ukážeme celé rozhraní,
+    // aby se při načítání neobjevilo a hned nezmizelo.
+    try {
+      document.body.style.visibility = 'visible';
+    } catch (_) {}
   }
 
   init();
