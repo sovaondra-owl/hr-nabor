@@ -45,6 +45,13 @@ CREATE TABLE IF NOT EXISTS candidates (
   ukol TEXT,
   rejection_reason TEXT,
   watch BOOLEAN NOT NULL DEFAULT false,
+  gender TEXT,
+  salary_currency TEXT,
+  salary_note TEXT,
+  start_date TEXT,
+  languages TEXT,
+  potential TEXT,
+  cv_files JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -132,6 +139,43 @@ BEGIN
   ) THEN
     ALTER TABLE candidates ADD COLUMN opening_id UUID REFERENCES openings(id) ON DELETE SET NULL;
     CREATE INDEX IF NOT EXISTS idx_candidates_opening_id ON candidates(opening_id);
+  END IF;
+END $$;
+
+
+-- ---------- 5b. Sloupec cv_files u kandidátů (životopisy PDF) ----------
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'candidates' AND column_name = 'cv_files'
+  ) THEN
+    ALTER TABLE candidates ADD COLUMN cv_files JSONB;
+  END IF;
+END $$;
+COMMENT ON COLUMN candidates.cv_files IS 'Životopisy (PDF) – pole objektů { name, data } s base64 obsahem';
+
+
+-- ---------- 5c. Sloupce gender, salary_currency, salary_note, start_date, languages, potential ----------
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'candidates' AND column_name = 'gender') THEN
+    ALTER TABLE candidates ADD COLUMN gender TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'candidates' AND column_name = 'salary_currency') THEN
+    ALTER TABLE candidates ADD COLUMN salary_currency TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'candidates' AND column_name = 'salary_note') THEN
+    ALTER TABLE candidates ADD COLUMN salary_note TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'candidates' AND column_name = 'start_date') THEN
+    ALTER TABLE candidates ADD COLUMN start_date TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'candidates' AND column_name = 'languages') THEN
+    ALTER TABLE candidates ADD COLUMN languages TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'candidates' AND column_name = 'potential') THEN
+    ALTER TABLE candidates ADD COLUMN potential TEXT;
   END IF;
 END $$;
 

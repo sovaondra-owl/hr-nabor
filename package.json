@@ -7,7 +7,8 @@
     "dev": "node serve.js",
     "import-excel": "node scripts/import-excel.js",
     "build-import-template": "node scripts/build-import-template.js",
-    "server": "cd server && node index.js"
+    "server": "cd server && node index.js",
+    "deploy:edge": "npx supabase functions deploy analyze-screenshot --no-verify-jwt --project-ref axbjmxuolptpldtlxzio"
   },
   "dependencies": {
     "xlsx": "^0.18.5"

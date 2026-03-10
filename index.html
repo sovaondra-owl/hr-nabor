@@ -21,9 +21,9 @@
 
   <!-- Sidebar -->
   <aside class="w-64 bg-white border-r border-slate-100 flex flex-col h-full shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] z-10 flex-shrink-0">
-    <div class="p-6 flex items-center gap-3">
-      <div class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold p-2 rounded-xl text-sm shadow-md">HR</div>
-      <span class="font-bold text-xl tracking-tight text-slate-900">Nábor</span>
+    <div class="p-5 flex flex-col items-center gap-2">
+      <img src="assets/kofein-logo.png" alt="Kofein" class="h-10 w-auto max-w-full object-contain" />
+      <span class="text-xs font-medium text-slate-500 tracking-wide">HR Nábor</span>
     </div>
     <nav class="flex-1 px-3 space-y-0.5 mt-1">
       <a href="#dashboard" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative" data-view="dashboard">
@@ -172,7 +172,7 @@
               <label class="block text-xs font-medium text-slate-500 mb-1">Fáze</label>
               <select id="filter-stage" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"><option value="">Všechny fáze</option></select>
             </div>
-            <div title="Zaškrtnutím zobrazíte i kandidáty se stavem Zamítnut (ve výchozím nastavení jsou skrytí)">
+            <div id="filter-rejected-wrap" title="Zaškrtnutím zobrazíte i kandidáty se stavem Zamítnut (ve výchozím nastavení jsou skrytí)">
               <label class="block text-xs font-medium text-slate-500 mb-1">Zamítnuté</label>
               <label class="inline-flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white cursor-pointer hover:bg-slate-50 focus-within:ring-2 focus-within:ring-indigo-500/20">
                 <input type="checkbox" id="filter-show-rejected" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/40">
@@ -188,10 +188,10 @@
         </div>
 
         <div class="candidates-view-content flex-1 min-h-0 flex flex-col">
-          <div class="candidates-view-pane flex-1 min-h-0 flex flex-col" id="candidates-table-container" data-pane="table">
-            <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto" id="candidates-table-wrap" title="Tabulku lze posouvat do strany pro zobrazení dalších sloupců.">
+          <div class="candidates-view-pane flex-1 min-h-0 flex flex-col min-w-0" id="candidates-table-container" data-pane="table">
+            <div class="flex-1 min-h-0 min-w-0 overflow-x-auto overflow-y-auto" id="candidates-table-wrap" title="Tabulku lze posouvat do strany pro zobrazení dalších sloupců.">
               <div class="bg-white rounded-xl shadow-sm border border-slate-100 inline-block min-w-full">
-                <table class="w-full min-w-[1200px]" id="candidates-table">
+                <table class="w-full" id="candidates-table">
                   <thead id="candidates-thead" class="sticky top-0 z-10 bg-slate-50"></thead>
                   <tbody id="candidates-tbody"></tbody>
                 </table>
@@ -564,7 +564,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <label class="block text-sm"><span class="font-medium text-slate-500">Příjmení</span><input type="text" id="candidate-surname" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
           <label class="block text-sm"><span class="font-medium text-slate-500">Jméno</span><input type="text" id="candidate-firstname" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
-          <label class="block text-sm"><span class="font-medium text-slate-500">Zdroj</span><input type="text" id="candidate-source" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Zdroj</span><input type="text" id="candidate-source" list="candidate-source-datalist" autocomplete="off" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="Vyhledat nebo zadat zdroj"><datalist id="candidate-source-datalist"></datalist></label>
           <label class="block text-sm"><span class="font-medium text-slate-500">E-mail</span><input type="email" id="candidate-email" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
           <label class="block text-sm"><span class="font-medium text-slate-500">Telefon</span><input type="text" id="candidate-phone" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
           <label class="block text-sm"><span class="font-medium text-slate-500">LinkedIn</span><input type="url" id="candidate-linkedin" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="https://"></label>
@@ -586,9 +586,11 @@
           <label class="block text-sm"><span class="font-medium text-slate-500">Měna</span><select id="candidate-salaryCurrency" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
             <option value="CZK">CZK</option><option value="EUR">EUR</option><option value="USD">USD</option>
           </select></label>
-          <label class="block text-sm"><span class="font-medium text-slate-500">HPP / IČO</span><input type="text" id="candidate-contract" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+                    <label class="block text-sm"><span class="font-medium text-slate-500">HPP / IČO</span><select id="candidate-contract" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
+            <option value="">—</option><option value="HPP">HPP</option><option value="IČO">IČO</option><option value="HPP/IČO">HPP/IČO</option>
+          </select></label>
           <label class="block text-sm"><span class="font-medium text-slate-500">Pozn. ke mzdě</span><input type="text" id="candidate-salaryNote" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
-          <label class="block text-sm"><span class="font-medium text-slate-500">Datum nástupu</span><input type="text" id="candidate-startDate" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="např. 6.4.2026"></label>
+          <label class="block text-sm"><span class="font-medium text-slate-500">Datum nástupu</span><input type="date" id="candidate-startDate" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
           <label class="block text-sm"><span class="font-medium text-slate-500">Jazyky</span><input type="text" id="candidate-languages" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="Angličtina B2, Němčina A1"></label>
           <label class="block text-sm"><span class="font-medium text-slate-500">Potenciál</span><select id="candidate-potential" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
             <option value="">—</option><option value="Perspektivní">Perspektivní</option><option value="Průměrný">Průměrný</option><option value="Nevhodný">Nevhodný</option>
@@ -603,6 +605,11 @@
           <label class="block text-sm"><span class="font-medium text-slate-500">2. kolo</span><textarea id="candidate-kolo2" rows="3" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y"></textarea></label>
           <label class="block text-sm"><span class="font-medium text-slate-500">3. kolo</span><textarea id="candidate-kolo3" rows="2" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y"></textarea></label>
           <label class="block text-sm"><span class="font-medium text-slate-500">Důvod odmítnutí</span><textarea id="candidate-rejectionReason" rows="2" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-y"></textarea></label>
+          <div class="block text-sm">
+            <span class="font-medium text-slate-500">Životopisy (PDF)</span>
+            <input type="file" id="candidate-cv-input" accept=".pdf,application/pdf" multiple class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
+            <ul id="candidate-cv-list" class="mt-2 space-y-1 text-sm text-slate-600"></ul>
+          </div>
         </div>
       </div>
       <div class="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
@@ -710,16 +717,16 @@
         <button type="button" class="modal-close text-slate-400 hover:text-slate-600 text-2xl leading-none p-1 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Zavřít">&times;</button>
       </div>
       <div class="px-6 py-5 space-y-5">
-        <!-- API key -->
+        <!-- API key (volitelné, pokud backend má OPENAI_API_KEY v .env) -->
         <div>
-          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">OpenAI API klíč</label>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">OpenAI API klíč <span class="font-normal text-slate-400">(volitelné)</span></label>
           <div class="flex gap-2">
-            <input type="password" id="screenshot-api-key" class="flex-1 border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="sk-...">
+            <input type="password" id="screenshot-api-key" class="flex-1 border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="sk-... (stačí, když je klíč na serveru v .env)">
             <button type="button" id="btn-toggle-key-vis" class="text-slate-400 hover:text-slate-600 px-2" title="Zobrazit/skrýt">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
             </button>
           </div>
-          <p class="text-xs text-slate-400 mt-1">Klíč se ukládá lokálně v prohlížeči. Nikam se neodesílá kromě OpenAI API.</p>
+          <p class="text-xs text-slate-400 mt-1">Klíč stačí nastavit jednou v Supabase (Edge Functions → Secrets) — pak analýza funguje na všech počítačích bez zadávání. Jinak můžete zadejte svůj klíč zde (ukládá se jen v prohlížeči).</p>
         </div>
 
         <!-- Drop zone -->
@@ -734,11 +741,15 @@
           <div id="screenshot-previews" class="flex flex-wrap gap-3 mt-3"></div>
         </div>
 
-        <!-- Analyze button -->
-        <div class="flex items-center gap-3">
+        <!-- Analyze buttons -->
+        <div class="flex flex-wrap items-center gap-3">
           <button type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-all shadow-[0_2px_10px_-3px_rgba(79,70,229,0.5)] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" id="btn-analyze-screenshots" disabled>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            Analyzovat screenshoty
+            Analyzovat (AI)
+          </button>
+          <button type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" id="btn-extract-text-free" disabled title="Zdarma, bez API klíče – rozpozná text a vyplní e-mail, telefon, poznámky">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Extrahovat text (zdarma)
           </button>
           <span id="screenshot-status" class="text-sm text-slate-500"></span>
         </div>
@@ -758,14 +769,16 @@
             <label class="block text-sm"><span class="font-medium text-slate-500">LinkedIn</span><input type="url" id="ss-linkedin" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
             <label class="block text-sm"><span class="font-medium text-slate-500">Pozice</span><select id="ss-position" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></select></label>
             <label class="block text-sm"><span class="font-medium text-slate-500">Fáze</span><select id="ss-stage" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></select></label>
-            <label class="block text-sm"><span class="font-medium text-slate-500">Zdroj</span><input type="text" id="ss-source" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+            <label class="block text-sm"><span class="font-medium text-slate-500">Zdroj</span><input type="text" id="ss-source" list="ss-source-datalist" autocomplete="off" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="Vyhledat nebo zadat zdroj"><datalist id="ss-source-datalist"></datalist></label>
             <label class="block text-sm"><span class="font-medium text-slate-500">Plat</span><input type="text" id="ss-salary" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
             <label class="block text-sm"><span class="font-medium text-slate-500">Měna</span><select id="ss-salaryCurrency" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
               <option value="CZK">CZK</option><option value="EUR">EUR</option><option value="USD">USD</option>
             </select></label>
-            <label class="block text-sm"><span class="font-medium text-slate-500">HPP / IČO</span><input type="text" id="ss-contract" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+                        <label class="block text-sm"><span class="font-medium text-slate-500">HPP / IČO</span><select id="ss-contract" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
+              <option value="">—</option><option value="HPP">HPP</option><option value="IČO">IČO</option><option value="HPP/IČO">HPP/IČO</option>
+            </select></label>
             <label class="block text-sm"><span class="font-medium text-slate-500">Pozn. ke mzdě</span><input type="text" id="ss-salaryNote" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
-            <label class="block text-sm"><span class="font-medium text-slate-500">Datum nástupu</span><input type="text" id="ss-startDate" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
+                        <label class="block text-sm"><span class="font-medium text-slate-500">Datum nástupu</span><input type="date" id="ss-startDate" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
             <label class="block text-sm"><span class="font-medium text-slate-500">Jazyky</span><input type="text" id="ss-languages" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"></label>
             <label class="block text-sm"><span class="font-medium text-slate-500">Potenciál</span><select id="ss-potential" class="mt-1 w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400">
               <option value="">—</option><option value="Perspektivní">Perspektivní</option><option value="Průměrný">Průměrný</option><option value="Nevhodný">Nevhodný</option>
@@ -889,6 +902,7 @@
   </div>
 
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <!-- Supabase klient + konfigurace musí být načtené před app.js -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>

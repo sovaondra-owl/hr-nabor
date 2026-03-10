@@ -298,6 +298,13 @@ function candidateRowToApp(row) {
     ukol: row.ukol || '',
     rejectionReason: row.rejection_reason || '',
     watch: !!row.watch,
+    gender: row.gender || '',
+    salaryCurrency: row.salary_currency || '',
+    salaryNote: row.salary_note || '',
+    startDate: row.start_date || '',
+    languages: row.languages || '',
+    potential: row.potential || '',
+    cvFiles: Array.isArray(row.cv_files) ? row.cv_files : (row.cv_files ? [row.cv_files] : []),
     createdAt: row.created_at || '',
     updatedAt: row.updated_at || ''
   };
@@ -325,6 +332,13 @@ function candidateAppToRow(item) {
     ukol: item.ukol || null,
     rejection_reason: item.rejectionReason || null,
     watch: !!item.watch,
+    gender: item.gender || null,
+    salary_currency: item.salaryCurrency || null,
+    salary_note: item.salaryNote || null,
+    start_date: item.startDate || null,
+    languages: item.languages || null,
+    potential: item.potential || null,
+    cv_files: Array.isArray(item.cvFiles) && item.cvFiles.length ? item.cvFiles : null,
     updated_at: now
   };
 }
@@ -473,6 +487,15 @@ async function getCandidate(id) {
   });
 }
 
+function formatSupabaseError(err) {
+  if (!err) return 'Neznámá chyba';
+  const msg = err.message || '';
+  const code = err.code ? ` [${err.code}]` : '';
+  const details = err.details ? ` – ${err.details}` : '';
+  const hint = err.hint ? ` (${err.hint})` : '';
+  return msg + code + details + hint;
+}
+
 async function saveCandidate(item) {
   const supabase = getSupabase();
   if (supabase) {
@@ -482,14 +505,14 @@ async function saveCandidate(item) {
       const { data, error } = await supabase.from('candidates').update(row).eq('id', item.id).select().single();
       if (error) {
         console.error('Supabase saveCandidate update:', error);
-        throw error;
+        throw new Error(formatSupabaseError(error));
       }
       return candidateRowToApp(data);
     }
     const { data, error } = await supabase.from('candidates').insert(row).select().single();
     if (error) {
       console.error('Supabase saveCandidate insert:', error);
-      throw error;
+      throw new Error(formatSupabaseError(error));
     }
     return candidateRowToApp(data);
   }

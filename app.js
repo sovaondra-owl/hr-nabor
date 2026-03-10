@@ -13,6 +13,7 @@
   let watchOnly = false; // pokud true, ve výpise kandidátů zobrazujeme jen sledované
   const CANDIDATES_PAGE_SIZE = 100;
   let candidatesTablePage = 1;
+  let candidateModalCvFiles = []; // { name, data } base64 v modalu kandidáta
 
   function getAuthHeaders() {
     const token = localStorage.getItem('sessionToken');
@@ -88,6 +89,38 @@
     if (!isNaN(num) && num > 30000 && num < 60000) {
       const d = new Date((num - 25569) * 86400000);
       if (!isNaN(d.getTime())) return d.toLocaleDateString('cs-CZ');
+    }
+    return s;
+  }
+
+  /** Převod uloženého data (text nebo YYYY-MM-DD) na hodnotu pro input type="date" (YYYY-MM-DD). */
+  function startDateToInputValue(val) {
+    if (!val) return '';
+    const s = String(val).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const num = Number(s);
+    if (!isNaN(num) && num > 30000 && num < 60000) {
+      const d = new Date((num - 25569) * 86400000);
+      if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+    }
+    const match = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+    if (match) {
+      const day = match[1].padStart(2, '0');
+      const month = match[2].padStart(2, '0');
+      const year = match[3].length === 2 ? '20' + match[3] : match[3];
+      return `${year}-${month}-${day}`;
+    }
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+  }
+
+  /** Formátování data pro zobrazení v detailu (český formát). */
+  function formatStartDateDisplay(val) {
+    if (!val) return '';
+    const s = String(val).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+      const [y, m, d] = s.split('-');
+      return `${parseInt(d, 10)}. ${parseInt(m, 10)}. ${y}`;
     }
     return s;
   }
@@ -236,17 +269,11 @@
       const pos = positions.find(x => x.id === c.positionId);
       const posName = pos ? pos.name : (c.positionRaw || '').trim();
       const color = avatarColor(posName || name);
-      return `<div class="flex items-center gap-2 min-w-0"><div class="w-6 h-6 rounded-full ${color} flex items-center justify-center font-bold text-[10px] shrink-0">${escapeHtml(initials)}</div><span class="font-semibold text-slate-800 text-sm truncate min-w-0" title="${escapeHtml(name)}">${escapeHtml(name)}</span></div>`;
-    } },
-    { key: 'watch',           label: 'Sled.',             default: false, sortVal: c => (c.watch ? 1 : 0), render: c => {
-      const active = !!c.watch;
-      const color = active ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400';
-      const title = active ? 'Zrušit sledování kandidáta' : 'Sledovat kandidáta';
-      return `<button type="button" class="watch-toggle" data-id="${c.id}" title="${title}">
-        <svg class="w-4 h-4 ${color}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.18 3.63a1 1 0 00.95.69h3.813c.969 0 1.371 1.24.588 1.81l-3.084 2.24a1 1 0 00-.364 1.118l1.18 3.63c.3.922-.755 1.688-1.54 1.118L10 13.347l-3.174 2.816c-.784.57-1.838-.196-1.539-1.118l1.18-3.63a1 1 0 00-.364-1.118L3.02 9.057c-.783-.57-.38-1.81.588-1.81h3.813a1 1 0 00.95-.69l1.18-3.63z" />
-        </svg>
-      </button>`;
+      const watchActive = !!c.watch;
+      const watchColor = watchActive ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400';
+      const watchTitle = watchActive ? 'Zrušit sledování' : 'Sledovat kandidáta';
+      const starBtn = `<button type="button" class="watch-toggle shrink-0 p-0.5 rounded hover:bg-amber-50 transition-colors" data-id="${c.id}" title="${watchTitle}"><svg class="w-4 h-4 ${watchColor}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.18 3.63a1 1 0 00.95.69h3.813c.969 0 1.371 1.24.588 1.81l-3.084 2.24a1 1 0 00-.364 1.118l1.18 3.63c.3.922-.755 1.688-1.54 1.118L10 13.347l-3.174 2.816c-.784.57-1.838-.196-1.539-1.118l1.18-3.63a1 1 0 00-.364-1.118L3.02 9.057c-.783-.57-.38-1.81.588-1.81h3.813a1 1 0 00.95-.69l1.18-3.63z"/></svg></button>`;
+      return `<div class="flex items-center gap-2 min-w-0">${starBtn}<div class="w-6 h-6 rounded-full ${color} flex items-center justify-center font-bold text-[10px] shrink-0">${escapeHtml(initials)}</div><span class="font-semibold text-slate-800 text-sm truncate min-w-0" title="${escapeHtml(name)}">${escapeHtml(name)}</span></div>`;
     }, interactive: true },
     { key: 'position',        label: 'Pozice',            default: true,  sortVal: c => { const p = positions.find(x => x.id === c.positionId); return (p ? p.name : '').toLowerCase(); }, render: c => { const p = positions.find(x => x.id === c.positionId); const v = p ? p.name : ''; return v ? `<span class="text-slate-600 text-[13px]">${escapeHtml(v)}</span>` : EMPTY; } },
     { key: 'stage',           label: 'Fáze',              default: true,  sortVal: c => (STAGE_LABELS[c.stage] || c.stage || '').toLowerCase(), render: c => renderStageSelect(c), interactive: true },
@@ -266,7 +293,7 @@
     { key: 'salary',          label: 'Plat',              default: false, sortVal: c => parseFloat(c.salary) || 0, render: c => c.salary ? `<span class="text-slate-700 font-medium text-[13px]">${escapeHtml(c.salary + (c.salaryCurrency ? ' ' + c.salaryCurrency : ''))}</span>` : EMPTY },
     { key: 'contract',        label: 'HPP / IČO',        default: false, sortVal: c => (c.contract || '').toLowerCase(), render: c => c.contract ? `<span class="text-slate-600 text-[13px]">${escapeHtml(c.contract)}</span>` : EMPTY },
     { key: 'salaryNote',      label: 'Pozn. ke mzdě',    default: false, sortVal: c => (c.salaryNote || '').toLowerCase(), render: c => c.salaryNote ? escapeHtml(c.salaryNote) : EMPTY },
-    { key: 'startDate',       label: 'Datum nástupu',     default: false, sortVal: c => (c.startDate || '').toLowerCase(), render: c => c.startDate ? escapeHtml(c.startDate) : EMPTY },
+    { key: 'startDate',       label: 'Datum nástupu',     default: false, sortVal: c => (c.startDate || '').toLowerCase(), render: c => c.startDate ? escapeHtml(formatStartDateDisplay(c.startDate)) : EMPTY },
     { key: 'languages',       label: 'Jazyky',            default: false, sortVal: c => (c.languages || '').toLowerCase(), render: c => c.languages ? escapeHtml(c.languages) : EMPTY },
     { key: 'potential',      label: 'Potenciál',         default: false, sortVal: c => (c.potential || '').toLowerCase(), render: c => c.potential ? `<span class="${TW.badge} text-[10px] ${c.potential === 'Perspektivní' ? 'bg-emerald-50 text-emerald-600' : c.potential === 'Nevhodný' ? 'bg-red-50 text-red-500' : 'bg-slate-100 text-slate-500'}">${escapeHtml(c.potential)}</span>` : EMPTY },
     { key: 'prvniInterakce',  label: 'První interakce',   default: false, sortVal: c => (c.prvniInterakce || '').toLowerCase(), render: c => { const v = excelDateToString(c.prvniInterakce); return v ? `<span class="text-slate-500 text-[13px]">${escapeHtml(v)}</span>` : EMPTY; } },
@@ -285,7 +312,6 @@
   /** Max šířky sloupců (px) podle obsahu – vyrovnané zobrazení. */
   const COLUMN_MAX_WIDTH = {
     name: 220,
-    watch: 56,
     position: 150,
     stage: 130,
     email: 180,
@@ -333,6 +359,11 @@
     localStorage.setItem(COL_STORAGE_KEY, JSON.stringify(optional));
   }
 
+  function toggleRejectedFilterVisibility() {
+    const wrap = document.getElementById('filter-rejected-wrap');
+    if (wrap) wrap.hidden = !!watchOnly;
+  }
+
   // --- Navigation ---
   function initNav() {
     const links = document.querySelectorAll('.sidebar-link[data-view]');
@@ -348,7 +379,7 @@
         v.classList.toggle('view-active', active);
         v.style.display = active ? 'flex' : 'none';
       });
-      if (viewId === 'kandidati') { renderCandidates(); renderPipelineIfActive(); }
+      if (viewId === 'kandidati') { toggleRejectedFilterVisibility(); renderCandidates(); renderPipelineIfActive(); }
       if (viewId === 'nabor') renderOpenings();
       if (viewId === 'pozice') renderPositions();
       if (viewId === 'prihlasky') renderApplications();
@@ -362,6 +393,7 @@
         const viewId = link.dataset.view;
         if (viewId) {
           watchOnly = link.dataset.watchOnly === '1';
+          toggleRejectedFilterVisibility();
           showView(viewId);
         }
       });
@@ -370,6 +402,7 @@
     const viewId = hash || 'dashboard';
     const hasView = document.getElementById(viewId);
     watchOnly = false;
+    toggleRejectedFilterVisibility();
     showView(hasView ? viewId : 'dashboard');
     if (viewId === 'uzivatele' && hasView) renderUzivatele();
   }
@@ -792,7 +825,7 @@
     const stage = document.getElementById('filter-stage').value;
     const showRejected = document.getElementById('filter-show-rejected') && document.getElementById('filter-show-rejected').checked;
     return candidates.filter(c => {
-      if (!showRejected && c.stage === 'zamitnut') return false;
+      if (!watchOnly && !showRejected && c.stage === 'zamitnut') return false;
       if (posId && c.positionId !== posId) return false;
       if (openingId && c.openingId !== openingId) return false;
       if (stage && c.stage !== stage) return false;
@@ -891,13 +924,23 @@
     return sortDirection === 'desc' ? sorted.reverse() : sorted;
   }
 
+  function hasActiveFilters() {
+    const search = (document.getElementById('search-candidates') || {}).value || '';
+    const posId = (document.getElementById('filter-position') || {}).value || '';
+    const openingId = (document.getElementById('filter-opening') || {}).value || '';
+    const stage = (document.getElementById('filter-stage') || {}).value || '';
+    const showRejected = document.getElementById('filter-show-rejected') && document.getElementById('filter-show-rejected').checked;
+    return !!(search.trim() || posId || openingId || stage || showRejected || watchOnly);
+  }
+
   function renderCandidatesPagination(total, totalPages, currentPage) {
     const infoEl = document.getElementById('candidates-pagination-info');
     const btnsEl = document.getElementById('candidates-pagination-buttons');
     if (!infoEl || !btnsEl) return;
     const from = total === 0 ? 0 : (currentPage - 1) * CANDIDATES_PAGE_SIZE + 1;
     const to = Math.min(currentPage * CANDIDATES_PAGE_SIZE, total);
-    infoEl.textContent = `Zobrazeno ${from}–${to} z ${total}`;
+    const filterHint = hasActiveFilters() && total > 0 ? ' (vyfiltrováno)' : '';
+    infoEl.textContent = `Zobrazeno ${from}–${to} z ${total}${filterHint}`;
     if (totalPages <= 1) {
       btnsEl.innerHTML = '';
       return;
@@ -950,7 +993,11 @@
       const w = columnWidthStyle(c.key);
       return `<th class="${TW.th} cursor-pointer select-none hover:text-indigo-500 transition-colors whitespace-nowrap" data-sort-key="${c.key}"${w}>${escapeHtml(c.label)}${sortArrow(c.key)}</th>`;
     }).join('');
-    document.getElementById('candidates-thead').innerHTML =
+    const tableEl = document.getElementById('candidates-table');
+    const tableHead = document.getElementById('candidates-thead');
+    const minTableWidth = cols.reduce((sum, col) => sum + (COLUMN_MAX_WIDTH[col.key] || 120), 0);
+    if (tableEl) tableEl.style.minWidth = minTableWidth + 'px';
+    tableHead.innerHTML =
       `<tr class="bg-slate-50 border-b border-slate-200">${thCells}</tr>`;
 
     document.querySelectorAll('#candidates-thead th[data-sort-key]').forEach(th => {
@@ -1291,11 +1338,16 @@
       { title: 'Důvod odmítnutí', text: c.rejectionReason }
     ].filter(s => s.text && String(s.text).trim());
 
+    const watchStarColor = c.watch ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400';
+    const watchStarTitle = c.watch ? 'Zrušit sledování' : 'Sledovat kandidáta';
     document.getElementById('candidate-detail-body').innerHTML = `
       <div class="flex items-start gap-5 mb-8">
         <div class="w-16 h-16 rounded-full ${avColor} flex items-center justify-center font-bold text-xl shrink-0 border-2 border-white shadow-sm">${initials}</div>
         <div class="flex-1 min-w-0">
-          <h1 class="text-2xl font-extrabold text-slate-900 leading-tight">${escapeHtml(fullName)}</h1>
+          <div class="flex items-center gap-2">
+            <button type="button" id="detail-watch-btn" class="watch-toggle shrink-0 p-1 rounded hover:bg-amber-50 transition-colors" data-id="${c.id}" title="${watchStarTitle}"><svg class="w-6 h-6 ${watchStarColor}" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.18 3.63a1 1 0 00.95.69h3.813c.969 0 1.371 1.24.588 1.81l-3.084 2.24a1 1 0 00-.364 1.118l1.18 3.63c.3.922-.755 1.688-1.54 1.118L10 13.347l-3.174 2.816c-.784.57-1.838-.196-1.539-1.118l1.18-3.63a1 1 0 00-.364-1.118L3.02 9.057c-.783-.57-.38-1.81.588-1.81h3.813a1 1 0 00.95-.69l1.18-3.63z"/></svg></button>
+            <h1 class="text-2xl font-extrabold text-slate-900 leading-tight">${escapeHtml(fullName)}</h1>
+          </div>
           <div class="flex flex-wrap items-center gap-2 mt-2">
             <span class="${badgeClass(c.stage)} inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border border-slate-200">
               <span class="w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>${escapeHtml(stageLabel)}
@@ -1307,16 +1359,16 @@
             ${c.phone ? `<button type="button" class="detail-copy-trigger inline-flex items-center gap-1.5 px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-sm font-medium transition-colors" data-copy="${escapeHtml(c.phone)}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.586a1 1 0 01.707.293l7.414 7.414a1 1 0 01.293.707V19a2 2 0 01-2 2h-1M8 7V5a2 2 0 012-2h2M8 7v10M8 7h8"></path></svg>Zkopírovat telefon</button>` : ''}
           </div>
           ${(openings.filter(o => o.status === 'aktivni').length > 0) ? `
-          <div class="mt-5 pt-5 border-t border-slate-100">
+          <div class="mt-5 pt-5 border-t border-slate-100" id="detail-add-to-opening-block">
             <p class="text-[11px] text-slate-500 uppercase tracking-wider mb-2 font-bold">Přidat do výběrového řízení</p>
-            <div class="flex flex-wrap gap-2 items-center">
+            <div id="detail-add-to-opening-form" class="flex flex-wrap gap-2 items-center">
               <select id="detail-add-to-opening" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 min-w-[200px]">
                 <option value="">— vyberte výběrku —</option>
                 ${openings.filter(o => o.status === 'aktivni').map(o => `<option value="${o.id}">${escapeHtml(o.title || 'Výběrové řízení')}</option>`).join('')}
               </select>
-              <button type="button" id="detail-btn-add-to-opening" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-medium rounded-lg transition-colors">Přidat a zařadit na telefonát</button>
+              <button type="button" id="detail-btn-add-to-opening" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-medium rounded-lg transition-colors">Přidat k výběrce</button>
             </div>
-            <p class="text-xs text-slate-400 mt-1.5">Kandidát bude přiřazen k výběrce a fáze se změní na Telefonát.</p>
+            <p id="detail-add-to-opening-success" class="hidden mt-2 text-sm font-medium text-emerald-600 flex items-center gap-2"><span class="inline-flex w-6 h-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">✓</span>Kandidát byl přiřazen k výběrce.</p>
           </div>
           ` : ''}
         </div>
@@ -1364,12 +1416,27 @@
               <p class="text-[11px] text-slate-500 uppercase tracking-wide mb-1">HPP / IČO</p>
               <p class="text-sm font-medium text-slate-900">${contractVal}</p>
             </div>
-            ${c.startDate ? `<div><p class="text-[11px] text-slate-500 uppercase tracking-wide mb-1">Datum nástupu</p><p class="text-sm font-medium text-slate-900">${escapeHtml(c.startDate)}</p></div>` : ''}
+            ${c.startDate ? `<div><p class="text-[11px] text-slate-500 uppercase tracking-wide mb-1">Datum nástupu</p><p class="text-sm font-medium text-slate-900">${escapeHtml(formatStartDateDisplay(c.startDate))}</p></div>` : ''}
             ${c.languages ? `<div><p class="text-[11px] text-slate-500 uppercase tracking-wide mb-1">Jazyky</p><p class="text-sm font-medium text-slate-900">${escapeHtml(c.languages)}</p></div>` : ''}
             ${c.potential ? `<div><p class="text-[11px] text-slate-500 uppercase tracking-wide mb-1">Potenciál</p><p class="text-sm font-medium text-slate-900">${escapeHtml(c.potential)}</p></div>` : ''}
           </div>
         </div>
       </div>
+
+      ${(c.cvFiles && c.cvFiles.length) ? `
+      <div class="mb-8">
+        <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">Životopisy (PDF)</h3>
+        <div class="flex flex-wrap gap-2">
+          ${c.cvFiles.map((f, i) => {
+            const name = (typeof f === 'object' && f.name) ? f.name : 'CV.pdf';
+            return `<button type="button" class="detail-cv-download inline-flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors" data-index="${i}">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l7.414 7.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              ${escapeHtml(name)}
+            </button>`;
+          }).join('')}
+        </div>
+      </div>
+      ` : ''}
 
       ${(c.notes && c.notes.trim()) ? `
       <div class="mb-8">
@@ -1408,22 +1475,78 @@
       });
     });
 
+    document.querySelectorAll('#candidate-detail-body .detail-cv-download').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = parseInt(btn.dataset.index, 10);
+        const f = c.cvFiles && c.cvFiles[i];
+        if (!f) return;
+        const name = (typeof f === 'object' && f.name) ? f.name : 'CV.pdf';
+        const data = (typeof f === 'object' && f.data) ? f.data : f;
+        try {
+          const bin = atob(data);
+          const arr = new Uint8Array(bin.length);
+          for (let j = 0; j < bin.length; j++) arr[j] = bin.charCodeAt(j);
+          const blob = new Blob([arr], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = name;
+          a.click();
+          URL.revokeObjectURL(url);
+        } catch (err) { console.error(err); }
+      });
+    });
+
+    const detailWatchBtn = document.getElementById('detail-watch-btn');
+    if (detailWatchBtn) {
+      detailWatchBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const cand = candidates.find(x => x.id === id);
+        if (!cand) return;
+        cand.watch = !cand.watch;
+        await saveCandidate(cand);
+        detailWatchBtn.querySelector('svg').classList.toggle('text-amber-500', cand.watch);
+        detailWatchBtn.querySelector('svg').classList.toggle('text-slate-300', !cand.watch);
+        detailWatchBtn.title = cand.watch ? 'Zrušit sledování' : 'Sledovat kandidáta';
+        renderCandidates();
+      });
+    }
+
     const addToOpeningBtn = document.getElementById('detail-btn-add-to-opening');
     const addToOpeningSelect = document.getElementById('detail-add-to-opening');
+    const addToOpeningForm = document.getElementById('detail-add-to-opening-form');
+    const addToOpeningSuccess = document.getElementById('detail-add-to-opening-success');
     if (addToOpeningBtn && addToOpeningSelect) {
       addToOpeningBtn.addEventListener('click', async () => {
         const openingId = addToOpeningSelect.value;
-        if (!openingId) return;
+        if (!openingId) {
+          alert('Vyberte výběrkové řízení ze seznamu.');
+          return;
+        }
         const cand = candidates.find(x => x.id === id);
         if (!cand) return;
-        cand.openingId = openingId;
-        cand.stage = 'telefonat';
-        await saveCandidate(cand);
-        await loadCandidates();
-        closeModal('modal-candidate-detail');
-        renderCandidates();
-        renderSearchResults(filterCandidatesSearch());
-        renderPipelineIfActive && renderPipelineIfActive();
+        addToOpeningBtn.disabled = true;
+        addToOpeningBtn.textContent = 'Ukládám…';
+        try {
+          cand.openingId = openingId;
+          await saveCandidate(cand);
+          await loadCandidates();
+          if (addToOpeningForm) addToOpeningForm.classList.add('hidden');
+          if (addToOpeningSuccess) {
+            addToOpeningSuccess.classList.remove('hidden');
+          }
+          renderCandidates();
+          renderSearchResults(filterCandidatesSearch());
+          if (typeof renderPipelineIfActive === 'function') renderPipelineIfActive();
+          setTimeout(() => {
+            closeModal('modal-candidate-detail');
+          }, 1500);
+        } catch (err) {
+          console.error(err);
+          alert('Nepodařilo se přiřadit kandidáta: ' + (err.message || err));
+          addToOpeningBtn.disabled = false;
+          addToOpeningBtn.textContent = 'Přidat k výběrce';
+        }
       });
     }
   }
@@ -1467,16 +1590,56 @@
     if (id) {
       const c = candidates.find(x => x.id === id);
       if (!c) return;
-      CANDIDATE_FIELDS.forEach(f => { const el = document.getElementById('candidate-' + f); if (el) el.value = c[f] || ''; });
+      CANDIDATE_FIELDS.forEach(f => {
+        const el = document.getElementById('candidate-' + f);
+        if (el) el.value = (f === 'contract' ? contractToSelectValue(c[f]) : (f === 'startDate' ? startDateToInputValue(c[f]) : (c[f] || '')));
+      });
       document.getElementById('candidate-position').value = c.positionId || '';
       document.getElementById('candidate-stage').value = c.stage || 'novy_kandidat';
+      candidateModalCvFiles = (c.cvFiles && c.cvFiles.length) ? c.cvFiles.map(f => typeof f === 'object' && f.name ? { name: f.name, data: f.data } : { name: 'CV.pdf', data: f }) : [];
     } else {
       CANDIDATE_FIELDS.forEach(f => { const el = document.getElementById('candidate-' + f); if (el) el.value = ''; });
       document.getElementById('candidate-position').value = positions[0] ? positions[0].id : '';
       document.getElementById('candidate-stage').value = 'novy_kandidat';
+      candidateModalCvFiles = [];
     }
+    renderCandidateCvList();
+    fillSourceDatalist('candidate-source-datalist');
     document.getElementById('modal-candidate').classList.add('modal-open');
     document.getElementById('modal-candidate').setAttribute('aria-hidden', 'false');
+  }
+
+  function getUniqueSourceOptions() {
+    const set = new Set();
+    candidates.forEach(c => { if (c.source && String(c.source).trim()) set.add(String(c.source).trim()); });
+    return [...set].sort((a, b) => a.localeCompare(b, 'cs'));
+  }
+
+  function fillSourceDatalist(datalistId) {
+    const el = document.getElementById(datalistId);
+    if (!el) return;
+    const options = getUniqueSourceOptions();
+    el.innerHTML = options.map(s => `<option value="${escapeHtml(s)}">`).join('');
+  }
+
+  function renderCandidateCvList() {
+    const listEl = document.getElementById('candidate-cv-list');
+    if (!listEl) return;
+    listEl.innerHTML = candidateModalCvFiles.map((f, i) =>
+      `<li class="flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg bg-slate-50 border border-slate-100">
+        <span class="truncate text-slate-700">${escapeHtml(f.name || 'CV.pdf')}</span>
+        <button type="button" class="candidate-cv-remove shrink-0 text-slate-400 hover:text-red-600 transition-colors p-1 rounded" data-index="${i}" title="Odebrat">✕</button>
+      </li>`
+    ).join('');
+    listEl.querySelectorAll('.candidate-cv-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = parseInt(btn.dataset.index, 10);
+        if (!isNaN(i) && i >= 0 && i < candidateModalCvFiles.length) {
+          candidateModalCvFiles.splice(i, 1);
+          renderCandidateCvList();
+        }
+      });
+    });
   }
 
   async function saveCandidateFromModal() {
@@ -1488,7 +1651,23 @@
     CANDIDATE_FIELDS.forEach(f => { const el = document.getElementById('candidate-' + f); record[f] = el ? el.value.trim() : ''; });
     record.positionId = document.getElementById('candidate-position').value || null;
     record.stage = document.getElementById('candidate-stage').value;
-    await saveCandidate(record); await loadCandidates(); renderCandidates(); closeModal('modal-candidate'); renderDashboard();
+    record.cvFiles = candidateModalCvFiles.length ? candidateModalCvFiles : undefined;
+    const btn = document.getElementById('btn-save-candidate');
+    const originalText = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Ukládám…'; }
+    try {
+      await saveCandidate(record);
+      await loadCandidates();
+      renderCandidates();
+      closeModal('modal-candidate');
+      renderDashboard();
+    } catch (err) {
+      console.error('saveCandidateFromModal:', err);
+      const msg = err && err.message ? err.message : String(err);
+      alert('Kandidáta se nepodařilo uložit.\n\n' + msg + '\n\nZkontrolujte v Supabase SQL Editoru, že tabulka candidates má sloupce: gender, salary_currency, salary_note, start_date, languages, potential, cv_files (viz sekce 5b a 5c v schématu).');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = originalText; }
+    }
   }
 
   // --- Applications ---
@@ -1613,6 +1792,23 @@
     return -1;
   }
 
+  const CONTRACT_OPTIONS = ['', 'HPP', 'IČO', 'HPP/IČO'];
+  function normalizeContractImport(text) {
+    if (!text) return '';
+    const t = String(text).trim();
+    const lower = t.toLowerCase();
+    if (/hpp|pp/.test(lower) && /i\u010do|ico/.test(lower)) return 'HPP/IČO';
+    if (/^hpp\/i\u010do$/i.test(t) || /^hpp\s*\/\s*i\u010do$/i.test(t)) return 'HPP/IČO';
+    if (/^hpp$/i.test(t)) return 'HPP';
+    if (/^i\u010do$/i.test(t) || /^ico$/i.test(t)) return 'IČO';
+    return t;
+  }
+  function contractToSelectValue(val) {
+    if (!val) return '';
+    const n = normalizeContractImport(val);
+    return CONTRACT_OPTIONS.includes(n) ? n : '';
+  }
+
   function normalizeStageImport(text) {
     if (!text) return 'novy_kandidat';
     const t = text.toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -1684,7 +1880,7 @@
       out.push({ surname, firstname, email: rawEmail, phone: rawPhone,
         linkedin: sv(iLinkedin), source: sv(iSource), prvniInterakce: excelDateToString(sv(iPrvni)), notes: sv(iNotes),
         kolo1: sv(iKolo1), kolo2: sv(iKolo2), kolo3: sv(iKolo3), ukol: sv(iUkol), rejectionReason: sv(iDuvod),
-        salary: sv(iPlat), contract: sv(iContract), positionName: posName || sv(iPos), stage: normalizeStageImport(sv(iStage)) });
+        salary: sv(iPlat), contract: normalizeContractImport(sv(iContract)), positionName: posName || sv(iPos), stage: normalizeStageImport(sv(iStage)) });
     }
     return out;
   }
@@ -1881,7 +2077,7 @@
           prvniInterakce: excelDateToString(raw.prvniInterakce_raw),
           notes: raw.notes, kolo1: raw.kolo1, kolo2: raw.kolo2, kolo3: raw.kolo3,
           ukol: raw.ukol, rejectionReason: raw.rejectionReason,
-          salary: raw.salary, contract: raw.contract,
+          salary: raw.salary, contract: normalizeContractImport(raw.contract || ''),
           positionName: raw.positionName || '', stage, watch,
         });
       }
@@ -1976,9 +2172,17 @@
 
   function findPositionByName(name) {
     if (!name) return null;
-    const norm = name.trim().toLowerCase();
+    const norm = String(name).trim().toLowerCase().replace(/\s+/g, ' ');
     if (!norm) return null;
-    return positions.find(p => (p.name || '').trim().toLowerCase() === norm) || null;
+    // Přesná shoda (včetně normalizované mezery)
+    let pos = positions.find(p => (p.name || '').trim().toLowerCase().replace(/\s+/g, ' ') === norm);
+    if (pos) return pos;
+    // Částečná shoda: název pozice obsahuje hledaný text nebo naopak (např. "PPC" → "PPC Specialista")
+    pos = positions.find(p => {
+      const pn = (p.name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      return pn && (pn === norm || pn.includes(norm) || norm.includes(pn));
+    });
+    return pos || null;
   }
 
   function resolvePositionId(posName) {
@@ -2270,6 +2474,26 @@
   document.getElementById('btn-add-opening').addEventListener('click', () => openOpeningModal(null));
   document.getElementById('btn-save-opening').addEventListener('click', () => saveOpeningFromModal());
   document.getElementById('btn-save-candidate').addEventListener('click', saveCandidateFromModal);
+  document.getElementById('candidate-cv-input').addEventListener('change', async (e) => {
+    const files = e.target.files;
+    if (!files || !files.length) return;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file.type || !file.type.includes('pdf')) continue;
+      const data = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => {
+          const base64 = r.result;
+          resolve(base64 && base64.indexOf(',') >= 0 ? base64.slice(base64.indexOf(',') + 1) : base64);
+        };
+        r.onerror = () => reject(r.error);
+        r.readAsDataURL(file);
+      });
+      candidateModalCvFiles.push({ name: file.name || 'CV.pdf', data });
+      renderCandidateCvList();
+    }
+    e.target.value = '';
+  });
   document.getElementById('btn-save-notes').addEventListener('click', saveNotesModal);
   document.getElementById('btn-add-position').addEventListener('click', () => openPositionModal(null));
   document.getElementById('btn-add-candidate').addEventListener('click', () => openCandidateModal(null));
@@ -2393,6 +2617,8 @@
     });
 
     document.getElementById('btn-analyze-screenshots').addEventListener('click', analyzeScreenshots);
+    const freeBtnEl = document.getElementById('btn-extract-text-free');
+    if (freeBtnEl) freeBtnEl.addEventListener('click', extractTextFromScreenshotsOCR);
     document.getElementById('btn-save-from-screenshot').addEventListener('click', saveFromScreenshot);
   }
 
@@ -2423,12 +2649,71 @@
       });
     });
     document.getElementById('btn-analyze-screenshots').disabled = screenshotImages.length === 0;
+    const freeBtn = document.getElementById('btn-extract-text-free');
+    if (freeBtn) freeBtn.disabled = screenshotImages.length === 0;
+  }
+
+  async function extractTextFromScreenshotsOCR() {
+    if (screenshotImages.length === 0) return;
+    const statusEl = document.getElementById('screenshot-status');
+    const freeBtn = document.getElementById('btn-extract-text-free');
+    const analyzeBtn = document.getElementById('btn-analyze-screenshots');
+    if (statusEl) { statusEl.textContent = 'Rozpoznávám text (zdarma, chvíli to trvá)…'; statusEl.className = 'text-sm text-emerald-600 font-medium'; }
+    if (freeBtn) freeBtn.disabled = true;
+    if (analyzeBtn) analyzeBtn.disabled = true;
+    try {
+      if (typeof Tesseract === 'undefined') throw new Error('Tesseract.js není načten. Obnovte stránku.');
+      const allTexts = [];
+      for (let i = 0; i < screenshotImages.length; i++) {
+        if (statusEl) statusEl.textContent = `Rozpoznávám text (obrázek ${i + 1}/${screenshotImages.length})…`;
+        const { data } = await Tesseract.recognize(screenshotImages[i].dataUrl, 'ces+eng');
+        if (data && data.text) allTexts.push(data.text.trim());
+      }
+      const fullText = allTexts.join('\n\n');
+      const emailRe = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+      const emails = fullText.match(emailRe) || [];
+      const email = emails[0] || '';
+      const phoneRe = /(\+420\s?)?[0-9]{3}[\s.]?[0-9]{3}[\s.]?[0-9]{3}[\s.]?[0-9]{3}|[\d\s+()-]{10,}/g;
+      const phones = fullText.match(phoneRe) || [];
+      const phone = (phones.map(p => p.replace(/\s/g, '').trim()).find(p => p.replace(/\D/g, '').length >= 9)) || phones[0] || '';
+      const linkedinRe = /https?:\/\/(www\.)?linkedin\.com\/in\/[^\s)]+/gi;
+      const linkedinMatch = fullText.match(linkedinRe);
+      const linkedin = linkedinMatch ? linkedinMatch[0] : '';
+      const lines = fullText.split(/\n+/).map(l => l.trim()).filter(Boolean);
+      let surname = '', firstname = '';
+      if (lines.length >= 1) {
+        const firstLine = lines[0];
+        if (!emailRe.test(firstLine) && !phoneRe.test(firstLine) && firstLine.length < 80) {
+          const parts = firstLine.split(/\s+/).filter(Boolean);
+          if (parts.length >= 2) { surname = parts[0]; firstname = parts.slice(1).join(' '); }
+          else if (parts.length === 1) firstname = parts[0];
+        }
+      }
+      const used = new Set([email, phone, linkedin, surname, firstname].filter(Boolean));
+      const notesParts = fullText.split(/\n+/).filter(p => {
+        const t = p.trim();
+        if (!t) return false;
+        if (used.has(t)) return false;
+        if (emailRe.test(t) || phoneRe.test(t) || linkedinRe.test(t)) return false;
+        return true;
+      });
+      const notes = notesParts.join('\n').trim().slice(0, 2000);
+      const parsed = { surname, firstname, email, phone, linkedin, notes, source: '', salary: '', salaryNote: '', contract: '', startDate: '', languages: '', positionName: '' };
+      fillScreenshotForm(parsed);
+      document.getElementById('screenshot-result').classList.remove('hidden');
+      document.getElementById('btn-save-from-screenshot').disabled = false;
+      if (statusEl) { statusEl.textContent = 'Text rozpoznán (zdarma). Zkontrolujte a doplňte údaje.'; statusEl.className = 'text-sm text-emerald-600 font-medium'; }
+    } catch (err) {
+      if (statusEl) { statusEl.textContent = 'Chyba: ' + (err.message || err); statusEl.className = 'text-sm text-red-600 font-medium'; }
+    } finally {
+      if (freeBtn) freeBtn.disabled = screenshotImages.length === 0;
+      if (analyzeBtn) analyzeBtn.disabled = screenshotImages.length === 0;
+    }
   }
 
   async function analyzeScreenshots() {
-    const apiKey = document.getElementById('screenshot-api-key').value.trim();
-    if (!apiKey) return alert('Zadejte OpenAI API klíč.');
-    localStorage.setItem(SS_KEY_STORAGE, apiKey);
+    const apiKeyInput = document.getElementById('screenshot-api-key').value.trim();
+    if (apiKeyInput) localStorage.setItem(SS_KEY_STORAGE, apiKeyInput);
 
     if (screenshotImages.length === 0) return alert('Přidejte alespoň jeden screenshot.');
 
@@ -2438,12 +2723,74 @@
     statusEl.textContent = 'Analyzuji…';
     statusEl.className = 'text-sm text-indigo-600 font-medium animate-pulse';
 
-    const imageMessages = screenshotImages.map(img => ({
-      type: 'image_url',
-      image_url: { url: img.dataUrl, detail: 'high' }
-    }));
+    const apiBase = (typeof window !== 'undefined' && window.API_BASE) ? window.API_BASE.replace(/\/$/, '') : '';
 
-    const systemPrompt = `Jsi HR asistent. Z přiložených screenshotů extrahuj informace o uchazeči/kandidátovi. Vrať POUZE platný JSON objekt s těmito poli (pokud informace není dostupná, nech prázdný string):
+    function onSuccess(parsed) {
+      fillScreenshotForm(parsed);
+      document.getElementById('screenshot-result').classList.remove('hidden');
+      document.getElementById('btn-save-from-screenshot').disabled = false;
+      statusEl.textContent = 'Data rozpoznána — zkontrolujte a uložte.';
+      statusEl.className = 'text-sm text-emerald-600 font-medium';
+    }
+    function onError(msg) {
+      statusEl.textContent = msg;
+      statusEl.className = 'text-sm text-red-600 font-medium';
+    }
+
+    try {
+      // 1. Supabase Edge Function – funguje na jakémkoliv počítači, klíč je jednou v Supabase
+      const supabase = (typeof window !== 'undefined' && window.supabaseClient) || null;
+      if (supabase) {
+        const { data: fnData, error: fnErr } = await supabase.functions.invoke('analyze-screenshot', {
+          body: { images: screenshotImages }
+        });
+        if (!fnErr && fnData && fnData.data) {
+          onSuccess(fnData.data);
+          return;
+        }
+        if (fnData?.code === 'NO_API_KEY' && !apiKeyInput) {
+          onError('V Supabase není nastaven OPENAI_API_KEY. V Dashboardu: Edge Functions → Secrets. Nebo zadejte klíč níže.');
+          return;
+        }
+        if (fnErr && !apiKeyInput) {
+          const hint = fnErr.message && (fnErr.message.includes('404') || fnErr.message.includes('not found'))
+            ? ' Je funkce analyze-screenshot nasazená? (supabase functions deploy analyze-screenshot)'
+            : '';
+          onError('Supabase Edge Function neodpověděla.' + hint + ' Zadejte klíč níže jako záložní variantu.');
+          return;
+        }
+        // máme apiKeyInput – fallback na přímé volání níže
+      }
+
+      // 2. Node backend (klíč v .env na serveru)
+      if (apiBase) {
+        const res = await fetch(apiBase + '/api/screenshot/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ images: screenshotImages })
+        });
+        const json = await res.json().catch(() => ({}));
+        if (res.ok && json.data) {
+          onSuccess(json.data);
+          return;
+        }
+        if (res.status === 501 && json.code === 'NO_API_KEY' && !apiKeyInput) {
+          onError('Na serveru není nastaven OPENAI_API_KEY. Zadejte klíč do pole níže nebo nastavte v Supabase Edge Function Secrets.');
+          return;
+        }
+        if (!res.ok && !apiKeyInput) {
+          onError(json.error || 'Chyba serveru. Zadejte OpenAI API klíč pro přímé volání.');
+          return;
+        }
+      }
+
+      // 3. Přímé volání OpenAI (klíč v modalu – záložní varianta)
+      if (apiKeyInput) {
+        const imageMessages = screenshotImages.map(img => ({
+          type: 'image_url',
+          image_url: { url: img.dataUrl, detail: 'high' }
+        }));
+        const systemPrompt = `Jsi HR asistent. Z přiložených screenshotů extrahuj informace o uchazeči/kandidátovi. Vrať POUZE platný JSON objekt s těmito poli (pokud informace není dostupná, nech prázdný string):
 {
   "surname": "příjmení",
   "firstname": "křestní jméno",
@@ -2464,58 +2811,47 @@
   "notes": "veškeré poznámky a komentáře k uchazeči"
 }
 Vrať JEN JSON, žádný markdown, žádné vysvětlení.`;
-
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: [
-              { type: 'text', text: 'Analyzuj tyto screenshoty a extrahuj data uchazeče:' },
-              ...imageMessages
-            ]}
-          ],
-          max_tokens: 2000,
-          temperature: 0.1
-        })
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error?.message || `HTTP ${response.status}`);
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKeyInput}` },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: [
+                { type: 'text', text: 'Analyzuj tyto screenshoty a extrahuj data uchazeče:' },
+                ...imageMessages
+              ]}
+            ],
+            max_tokens: 2000,
+            temperature: 0.1
+          })
+        });
+        const errBody = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(errBody.error?.message || `HTTP ${response.status}`);
+        const content = errBody.choices?.[0]?.message?.content || '';
+        const jsonMatch = content.replace(/```json?\s*/g, '').replace(/```/g, '').trim();
+        onSuccess(JSON.parse(jsonMatch));
+      } else {
+        onError('Pro analýzu je potřeba nastavit OPENAI_API_KEY v Supabase (Edge Functions → Secrets) jednou — pak to funguje na všech počítačích. Nebo zadejte klíč do pole níže.');
       }
-
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content || '';
-      const jsonMatch = content.replace(/```json?\s*/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(jsonMatch);
-
-      fillScreenshotForm(parsed);
-      document.getElementById('screenshot-result').classList.remove('hidden');
-      document.getElementById('btn-save-from-screenshot').disabled = false;
-      statusEl.textContent = 'Data rozpoznána — zkontrolujte a uložte.';
-      statusEl.className = 'text-sm text-emerald-600 font-medium';
-
     } catch (err) {
-      statusEl.textContent = 'Chyba: ' + err.message;
-      statusEl.className = 'text-sm text-red-600 font-medium';
+      onError('Chyba: ' + (err.message || err));
     } finally {
       analyzeBtn.disabled = screenshotImages.length === 0;
     }
   }
 
   function fillScreenshotForm(data) {
-    const fields = ['surname','firstname','email','phone','linkedin','source','salary','salaryNote','contract','startDate','languages','notes'];
+    const fields = ['surname','firstname','email','phone','linkedin','source','salary','salaryNote','languages','notes'];
     fields.forEach(f => {
       const el = document.getElementById('ss-' + f);
       if (el) el.value = data[f] || '';
     });
+    const contractEl = document.getElementById('ss-contract');
+    if (contractEl) contractEl.value = contractToSelectValue(data.contract || '');
+    const startDateEl = document.getElementById('ss-startDate');
+    if (startDateEl) startDateEl.value = startDateToInputValue(data.startDate || '');
     const selects = { gender: 'ss-gender', salaryCurrency: 'ss-salaryCurrency', potential: 'ss-potential' };
     Object.entries(selects).forEach(([key, id]) => {
       const el = document.getElementById(id);
@@ -2573,6 +2909,7 @@ Vrať JEN JSON, žádný markdown, žádné vysvětlení.`;
     document.getElementById('btn-save-from-screenshot').disabled = true;
     document.getElementById('screenshot-status').textContent = '';
     fillPositionSelect(document.getElementById('ss-position'), true);
+    fillSourceDatalist('ss-source-datalist');
     document.getElementById('modal-screenshot').classList.add('modal-open');
     document.getElementById('modal-screenshot').setAttribute('aria-hidden', 'false');
   }

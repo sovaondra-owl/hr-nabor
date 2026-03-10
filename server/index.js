@@ -1,8 +1,10 @@
 /**
- * Express server: auth API, pozvánky, session.
+ * Express server: auth API, pozvánky, session, analýza screenshotů (OpenAI).
  * Spuštění: cd server && npm install && npm start
  * Port: 3001 (nebo env PORT)
+ * Volitelně: .env s OPENAI_API_KEY pro „Ze screenshotu“ bez zadávání klíče v prohlížeči.
  */
+require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
@@ -17,7 +19,7 @@ const PORT = process.env.PORT || 3001;
 const app = express();
 
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: '15mb' }));
 app.use(cookieParser());
 
 // Session lookup (z DB, smazání vypršených)
@@ -54,6 +56,78 @@ app.get('/api/invitations/validate', (req, res) => {
     if (user) return res.json({ email: user.email, role: user.role, type: 'reset' });
   }
   return res.status(400).json({ error: 'Odkaz není platný nebo vypršel.' });
+});
+
+// Analýza screenshotů (OpenAI Vision) – klíč z env OPENAI_API_KEY
+app.post('/api/screenshot/analyze', async (req, res) => {
+  const apiKey = process.env.OPENAI_API_KEY || '';
+  if (!apiKey) {
+    return res.status(501).json({
+      error: 'OPENAI_API_KEY není na serveru nastaven. Nastavte ho v .env nebo zadejte klíč v modalu.',
+      code: 'NO_API_KEY'
+    });
+  }
+  const images = req.body?.images;
+  if (!Array.isArray(images) || images.length === 0) {
+    return res.status(400).json({ error: 'Očekává se pole obrázků (images s dataUrl).' });
+  }
+  const imageMessages = images.map(img => ({
+    type: 'image_url',
+    image_url: { url: img.dataUrl || img.data, detail: 'high' }
+  }));
+  const systemPrompt = `Jsi HR asistent. Z přiložených screenshotů extrahuj informace o uchazeči/kandidátovi. Vrať POUZE platný JSON objekt s těmito poli (pokud informace není dostupná, nech prázdný string):
+{
+  "surname": "příjmení",
+  "firstname": "křestní jméno",
+  "gender": "Muž nebo Žena",
+  "email": "e-mailová adresa",
+  "phone": "telefonní číslo",
+  "linkedin": "LinkedIn URL",
+  "positionName": "název pozice, o kterou se uchazeč uchází",
+  "stage": "fáze výběrového řízení (např. 1. kolo, Přijat, Zamítnut...)",
+  "source": "zdroj kandidáta",
+  "salary": "očekávaná mzda (jen číslo)",
+  "salaryCurrency": "měna (CZK, EUR, USD)",
+  "salaryNote": "poznámka ke mzdě (HPP, IČO apod.)",
+  "contract": "typ smlouvy (HPP, IČO, DPP...)",
+  "startDate": "možné datum nástupu",
+  "languages": "jazykové úrovně",
+  "potential": "potenciál uchazeče (Perspektivní, Průměrný, Nevhodný)",
+  "notes": "veškeré poznámky a komentáře k uchazeči"
+}
+Vrať JEN JSON, žádný markdown, žádné vysvětlení.`;
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: [
+            { type: 'text', text: 'Analyzuj tyto screenshoty a extrahuj data uchazeče:' },
+            ...imageMessages
+          ]}
+        ],
+        max_tokens: 2000,
+        temperature: 0.1
+      })
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      const msg = data?.error?.message || `HTTP ${response.status}`;
+      return res.status(502).json({ error: msg });
+    }
+    const content = data.choices?.[0]?.message?.content || '';
+    const jsonMatch = content.replace(/```json?\s*/g, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(jsonMatch);
+    res.json({ data: parsed });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Chyba při volání OpenAI.' });
+  }
 });
 
 app.use('/api/auth', authRoutes);
