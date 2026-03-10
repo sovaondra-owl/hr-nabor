@@ -168,7 +168,7 @@
   function compactStageSelectClass(stage) {
     if (stage === 'zamitnut') return 'bg-slate-100 text-slate-600 border-slate-200';
     if (stage === 'prijat') return 'bg-emerald-50 text-emerald-700 border-emerald-100';
-    if (['kolo1', 'kolo2'].includes(stage)) return 'bg-violet-50 text-violet-700 border-violet-100';
+    if (['kolo1', 'kolo2', 'nabidka'].includes(stage)) return 'bg-violet-50 text-violet-700 border-violet-100';
     if (['telefonat', 'ukol'].includes(stage)) return 'bg-sky-50 text-sky-700 border-sky-100';
     return 'bg-indigo-50 text-indigo-700 border-indigo-100';
   }
@@ -453,7 +453,7 @@
     const newApps = applications.filter(a => !a.convertedToCandidateId).length;
     document.getElementById('stat-new-applications').textContent = newApps;
 
-    const STAGE_BADGES = { novy_kandidat:'bg-blue-50 border-blue-100 text-blue-700', telefonat:'bg-sky-50 border-sky-100 text-sky-700', ukol:'bg-amber-50 border-amber-100 text-amber-700', kolo1:'bg-violet-50 border-violet-100 text-violet-700', kolo2:'bg-rose-50 border-rose-100 text-rose-700', prijat:'bg-emerald-50 border-emerald-100 text-emerald-700', zamitnut:'bg-slate-100 border-slate-200 text-slate-600' };
+    const STAGE_BADGES = { novy_kandidat:'bg-blue-50 border-blue-100 text-blue-700', telefonat:'bg-sky-50 border-sky-100 text-sky-700', ukol:'bg-amber-50 border-amber-100 text-amber-700', kolo1:'bg-violet-50 border-violet-100 text-violet-700', kolo2:'bg-rose-50 border-rose-100 text-rose-700', nabidka:'bg-amber-50 border-amber-100 text-amber-700', prijat:'bg-emerald-50 border-emerald-100 text-emerald-700', zamitnut:'bg-slate-100 border-slate-200 text-slate-600' };
     const byStage = {};
     candidates.forEach(c => { byStage[c.stage] = (byStage[c.stage] || 0) + 1; });
     let pipelineHtml = Object.entries(STAGE_LABELS).map(([key, label]) => {
@@ -1036,6 +1036,7 @@
     ukol: 'bg-amber-500',
     kolo1: 'bg-cyan-500',
     kolo2: 'bg-emerald-500',
+    nabidka: 'bg-amber-500',
     prijat: 'bg-green-500',
     zamitnut: 'bg-slate-400'
   };
@@ -1622,7 +1623,7 @@
       telefonat:'telefonat', osloven:'telefonat', osloven_a:'telefonat', oslovena:'telefonat', contacted:'telefonat', sj_reakce:'telefonat', 'e-mail':'telefonat', email:'telefonat',
       ukol:'ukol', zadost:'ukol', zadost_o_pozici:'ukol', dotaznik:'ukol', zaslan_dotaznik:'ukol', cekam:'ukol', cekam_na_odpoved:'ukol', ceka_se:'ukol', cekame:'ukol',
       kolo1:'kolo1', rozhovor:'kolo1', pohovor:'kolo1', interview:'kolo1', '1._kolo':'kolo1', '1_kolo':'kolo1',
-      kolo2:'kolo2', druhe_kolo:'kolo2', '2._kolo':'kolo2', '2_kolo':'kolo2', druhy_pohovor:'kolo2', nabidka:'kolo2', nabidnuto:'kolo2', offer:'kolo2',
+      kolo2:'kolo2', druhe_kolo:'kolo2', '2._kolo':'kolo2', '2_kolo':'kolo2', druhy_pohovor:'kolo2', nabidka:'nabidka', nabidnuto:'nabidka', offer:'nabidka',
       prijat:'prijat', prijata:'prijat', prijato:'prijat', nastoupil:'prijat', nastoupila:'prijat', posunuto_na_pozici:'prijat', posunuto:'prijat', hired:'prijat', accepted:'prijat',
       zamitnut:'zamitnut', zamitnuta:'zamitnut', zamitnuto:'zamitnut', odmitnuto:'zamitnut', odmitnut:'zamitnut', uzavreno:'zamitnut', uzavrena:'zamitnut', rejected:'zamitnut', closed:'zamitnut',
     };
@@ -2671,7 +2672,7 @@ Vrať JEN JSON, žádný markdown, žádné vysvětlení.`;
 
   const OLD_TO_NEW_STAGE = {
     nova_prihlaska: 'novy_kandidat', osloven: 'telefonat', zadost: 'ukol', dotaznik: 'ukol', cekam: 'ukol',
-    rozhovor: 'kolo1', nabidka: 'kolo1', druhe_kolo: 'kolo2',
+    rozhovor: 'kolo1', druhe_kolo: 'kolo2', nabidka: 'nabidka',
     prijat: 'prijat', zamitnut: 'zamitnut'
   };
   async function migrateStagesToNewKeys() {

@@ -405,13 +405,14 @@ async function deleteApplication(id) {
   });
 }
 
-// Fáze náboru (pouze těchto 7)
+// Fáze náboru
 const STAGE_LABELS = {
   novy_kandidat: 'Nový kandidát',
   telefonat: 'Telefonát',
   ukol: 'Úkol',
   kolo1: '1. kolo',
   kolo2: '2. kolo',
+  nabidka: 'Nabídka',
   prijat: 'Přijat',
   zamitnut: 'Zamítnut'
 };
