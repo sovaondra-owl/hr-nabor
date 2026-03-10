@@ -36,10 +36,15 @@
         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 6h18M5 10h10M5 14h6M5 18h4M15 11l2 2 4-4"/></svg>
         <span class="font-medium text-sm">Aktivní nábor</span>
       </a>
-      <a href="#kandidati" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative" data-view="kandidati">
+      <a href="#kandidati" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative" data-view="kandidati" data-watch-only="0">
         <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-md sidebar-active-bar opacity-0"></div>
         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         <span class="font-medium text-sm">Kandidáti</span>
+      </a>
+      <a href="#kandidati" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative auth-no-viewer" data-view="kandidati" data-watch-only="1">
+        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-500 rounded-r-md sidebar-active-bar opacity-0"></div>
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.518 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.975 2.884a1 1 0 00-.364 1.118l1.518 4.674c.3.922-.755 1.688-1.54 1.118L12 16.347l-4.611 3.548c-.784.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.364-1.118L3.03 10.101c-.783-.57-.38-1.81.588-1.81h4.915a1 1 0 00.95-.69l1.518-4.674z"/></svg>
+        <span class="font-medium text-sm">Sledovaní kandidáti</span>
       </a>
       <a href="#vyhledavani" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative" data-view="vyhledavani">
         <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-md sidebar-active-bar opacity-0"></div>
@@ -145,17 +150,40 @@
             </button>
           </div>
         </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-wrap gap-3 items-center mb-6">
-          <div class="relative flex-1 min-w-[200px]">
-            <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input type="search" id="search-candidates" class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-inner transition-all" placeholder="Hledat kandidáty…">
-          </div>
-          <select id="filter-position" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"><option value="">Všechny pozice</option></select>
-          <select id="filter-opening" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"><option value="">Všechna výběrová řízení</option></select>
-          <select id="filter-stage" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"><option value="">Všechny fáze</option></select>
-          <div class="columns-toggle-wrap relative">
-            <button type="button" class="px-3 py-2 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20" id="btn-toggle-columns">Sloupce ▾</button>
-            <div class="columns-dropdown absolute right-0 top-full mt-1 bg-white border border-slate-100 rounded-xl shadow-lg py-2 z-50 min-w-[220px] max-h-[360px] overflow-y-auto" id="columns-dropdown" hidden></div>
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm mb-6">
+          <p class="text-xs text-slate-500 mb-3">Filtrujte kandidáty podle pozice, výběrového řízení a fáze. Vyhledávání prohledává jméno, e-mail, telefon a poznámky. Ve výchozím nastavení se nezobrazují zamítnutí kandidáti.</p>
+          <div class="flex flex-wrap gap-3 items-end">
+            <div class="flex-1 min-w-[200px]" title="Fulltextové vyhledávání v jménech, e-mailu, telefonu, zdroji a poznámkách">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Hledat</label>
+              <div class="relative">
+                <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="search" id="search-candidates" class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-inner transition-all" placeholder="Jméno, e-mail, telefon…">
+              </div>
+            </div>
+            <div title="Zobrazí jen kandidáty přiřazené k vybrané pozici">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Pozice</label>
+              <select id="filter-position" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"><option value="">Všechny pozice</option></select>
+            </div>
+            <div title="Zobrazí jen kandidáty napojené na vybrané výběrové řízení">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Výběrové řízení</label>
+              <select id="filter-opening" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"><option value="">Všechna</option></select>
+            </div>
+            <div title="Zobrazí jen kandidáty ve zvolené fázi (např. 1. kolo, Přijat)">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Fáze</label>
+              <select id="filter-stage" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"><option value="">Všechny fáze</option></select>
+            </div>
+            <div title="Zaškrtnutím zobrazíte i kandidáty se stavem Zamítnut (ve výchozím nastavení jsou skrytí)">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Zamítnuté</label>
+              <label class="inline-flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white cursor-pointer hover:bg-slate-50 focus-within:ring-2 focus-within:ring-indigo-500/20">
+                <input type="checkbox" id="filter-show-rejected" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/40">
+                <span class="text-slate-700">Zobrazit</span>
+              </label>
+            </div>
+            <div class="columns-toggle-wrap relative">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Sloupce</label>
+              <button type="button" class="px-3 py-2 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20" id="btn-toggle-columns">Sloupce ▾</button>
+              <div class="columns-dropdown absolute right-0 top-full mt-1 bg-white border border-slate-100 rounded-xl shadow-lg py-2 z-50 min-w-[220px] max-h-[360px] overflow-y-auto" id="columns-dropdown" hidden></div>
+            </div>
           </div>
         </div>
 
@@ -168,6 +196,10 @@
                   <tbody id="candidates-tbody"></tbody>
                 </table>
               </div>
+            </div>
+            <div id="candidates-pagination" class="flex flex-wrap items-center justify-between gap-3 mt-3 px-1 py-2 border-t border-slate-100 shrink-0">
+              <p class="text-sm text-slate-500" id="candidates-pagination-info">Zobrazeno 0–0 z 0</p>
+              <div class="flex items-center gap-2" id="candidates-pagination-buttons"></div>
             </div>
             <p class="text-xs text-slate-400 mt-1 px-1 shrink-0">Pro zobrazení telefonu, IČO, e-mailu a dalších sloupců posuňte tabulku do strany.</p>
           </div>
@@ -324,6 +356,18 @@
         <p class="text-sm text-slate-500 mt-1">Nahrajte XLS, XLSX nebo CSV soubor</p>
       </header>
       <div class="px-8 py-6 space-y-5 max-w-3xl">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+          <h2 class="text-sm font-semibold text-slate-700 mb-1">Odstranit duplicity</h2>
+          <p class="text-sm text-slate-500 mb-4">Pokud jste omylem naimportovali kandidáty vícekrát, u každého jména a příjmení zůstane jen jeden záznam (ten s nejvíce vyplněnými údaji). Ostatní se smažou.</p>
+          <button type="button" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm" id="btn-remove-duplicates">Odstranit duplicity</button>
+          <div class="mt-3 p-3 bg-slate-50 rounded-lg text-sm text-slate-600 border border-slate-100" id="dedupe-log" hidden></div>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-red-100">
+          <h2 class="text-sm font-semibold text-slate-700 mb-1">Vyčistit databázi kandidátů</h2>
+          <p class="text-sm text-slate-500 mb-4">Smaže <strong>všechny</strong> kandidáty. Pozice a ostatní data zůstanou. Akci nelze vrátit.</p>
+          <button type="button" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm" id="btn-clear-all-candidates">Smazat všechny kandidáty</button>
+          <div class="mt-3 p-3 bg-slate-50 rounded-lg text-sm text-slate-600 border border-slate-100" id="clear-all-log" hidden></div>
+        </div>
         <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
           <h2 class="text-sm font-semibold text-slate-700 mb-1">1. Vyberte soubor</h2>
           <p class="text-sm text-slate-500 mb-4">Podporované formáty: <strong class="font-medium text-slate-600">.xlsx</strong>, <strong class="font-medium text-slate-600">.xls</strong>, <strong class="font-medium text-slate-600">.csv</strong></p>
@@ -789,6 +833,37 @@
       <div class="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
         <button type="button" class="modal-close bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">Zrušit</button>
         <button type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-[0_2px_10px_-3px_rgba(79,70,229,0.5)]" id="btn-save-opening">Uložit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Potvrzení heslem pro vymazání databáze -->
+  <div id="modal-clear-db-confirm" class="modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content max-w-md">
+      <div class="px-6 py-5">
+        <h2 class="text-lg font-semibold text-slate-900 mb-1">Vymazat databázi kandidátů</h2>
+        <p class="text-sm text-slate-500 mb-4">Bude smazáno <strong id="clear-all-count">0</strong> kandidátů. Pro dokončení zadejte své heslo.</p>
+        <input type="password" id="clear-db-password" class="w-full border border-slate-200 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" placeholder="Heslo" autocomplete="current-password">
+        <p class="mt-2 text-sm text-red-600 hidden" id="clear-db-password-error">Špatné heslo. Zkuste to znovu.</p>
+      </div>
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
+        <button type="button" class="modal-close clear-db-cancel bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">Zrušit</button>
+        <button type="button" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm" id="btn-clear-db-confirm">Smazat všechny kandidáty</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Průběh importu -->
+  <div id="modal-import-progress" class="modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content max-w-md">
+      <div class="px-6 py-6 text-center">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 mb-4">
+          <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        </div>
+        <h2 class="text-lg font-semibold text-slate-900 mb-1">Import probíhá</h2>
+        <p class="text-sm text-slate-600" id="import-progress-text">Připravuji…</p>
       </div>
     </div>
   </div>

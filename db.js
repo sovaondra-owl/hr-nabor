@@ -119,6 +119,12 @@ async function clearAllPositions() {
 }
 
 async function clearAllCandidates() {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { error } = await supabase.from('candidates').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    if (error) throw error;
+    return;
+  }
   const database = await openDB();
   return new Promise((resolve, reject) => {
     const tx = database.transaction('candidates', 'readwrite');
@@ -183,8 +189,89 @@ async function deleteOpening(id) {
   });
 }
 
-// --- Candidates ---
+// --- Candidates (Supabase nebo IndexedDB) ---
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function getSupabase() {
+  return (typeof window !== 'undefined' && window.supabaseClient) || null;
+}
+
+function candidateRowToApp(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    positionId: row.position_id || null,
+    stage: row.stage || 'nova_prihlaska',
+    surname: row.surname || '',
+    firstname: row.firstname || '',
+    email: row.email || '',
+    phone: row.phone || '',
+    linkedin: row.linkedin || '',
+    source: row.source || '',
+    salary: row.salary || '',
+    contract: row.contract || '',
+    prvniInterakce: row.prvni_interakce || '',
+    notes: row.notes || '',
+    kolo1: row.kolo1 || '',
+    kolo2: row.kolo2 || '',
+    kolo3: row.kolo3 || '',
+    ukol: row.ukol || '',
+    rejectionReason: row.rejection_reason || '',
+    watch: !!row.watch,
+    createdAt: row.created_at || '',
+    updatedAt: row.updated_at || ''
+  };
+}
+
+function candidateAppToRow(item) {
+  const now = new Date().toISOString();
+  return {
+    position_id: item.positionId || null,
+    stage: item.stage || 'nova_prihlaska',
+    surname: item.surname || null,
+    firstname: item.firstname || null,
+    email: item.email || null,
+    phone: item.phone || null,
+    linkedin: item.linkedin || null,
+    source: item.source || null,
+    salary: item.salary || null,
+    contract: item.contract || null,
+    prvni_interakce: item.prvniInterakce || null,
+    notes: item.notes || null,
+    kolo1: item.kolo1 || null,
+    kolo2: item.kolo2 || null,
+    kolo3: item.kolo3 || null,
+    ukol: item.ukol || null,
+    rejection_reason: item.rejectionReason || null,
+    watch: !!item.watch,
+    updated_at: now
+  };
+}
+
 async function getAllCandidates() {
+  const supabase = getSupabase();
+  if (supabase) {
+    const pageSize = 1000;
+    let all = [];
+    let offset = 0;
+    let hasMore = true;
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('candidates')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + pageSize - 1);
+      if (error) {
+        console.error('Supabase getAllCandidates:', error);
+        return all.length ? all.map(candidateRowToApp) : [];
+      }
+      const page = data || [];
+      all = all.concat(page);
+      hasMore = page.length === pageSize;
+      offset += pageSize;
+    }
+    return all.map(candidateRowToApp);
+  }
   const database = await openDB();
   return new Promise((resolve, reject) => {
     const tx = database.transaction('candidates', 'readonly');
@@ -196,6 +283,12 @@ async function getAllCandidates() {
 }
 
 async function getCandidate(id) {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { data, error } = await supabase.from('candidates').select('*').eq('id', id).single();
+    if (error || !data) return null;
+    return candidateRowToApp(data);
+  }
   const database = await openDB();
   return new Promise((resolve, reject) => {
     const tx = database.transaction('candidates', 'readonly');
@@ -207,6 +300,25 @@ async function getCandidate(id) {
 }
 
 async function saveCandidate(item) {
+  const supabase = getSupabase();
+  if (supabase) {
+    const row = candidateAppToRow(item);
+    const isUpdate = item.id && UUID_REGEX.test(String(item.id));
+    if (isUpdate) {
+      const { data, error } = await supabase.from('candidates').update(row).eq('id', item.id).select().single();
+      if (error) {
+        console.error('Supabase saveCandidate update:', error);
+        throw error;
+      }
+      return candidateRowToApp(data);
+    }
+    const { data, error } = await supabase.from('candidates').insert(row).select().single();
+    if (error) {
+      console.error('Supabase saveCandidate insert:', error);
+      throw error;
+    }
+    return candidateRowToApp(data);
+  }
   const database = await openDB();
   const record = { ...item };
   if (!record.id) {
@@ -224,6 +336,15 @@ async function saveCandidate(item) {
 }
 
 async function deleteCandidate(id) {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { error } = await supabase.from('candidates').delete().eq('id', id);
+    if (error) {
+      console.error('Supabase deleteCandidate:', error);
+      throw error;
+    }
+    return;
+  }
   const database = await openDB();
   return new Promise((resolve, reject) => {
     const tx = database.transaction('candidates', 'readwrite');

@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "HR náborový modul",
   "scripts": {
+    "start": "node serve.js",
+    "dev": "node serve.js",
     "import-excel": "node scripts/import-excel.js",
+    "build-import-template": "node scripts/build-import-template.js",
     "server": "cd server && node index.js"
   },
   "dependencies": {

@@ -10,6 +10,9 @@
   let currentApplicationId = null;
   let sortColumn = null;
   let sortDirection = 'asc';
+  let watchOnly = false; // pokud true, ve výpise kandidátů zobrazujeme jen sledované
+  const CANDIDATES_PAGE_SIZE = 100;
+  let candidatesTablePage = 1;
 
   function getAuthHeaders() {
     const token = localStorage.getItem('sessionToken');
@@ -235,6 +238,16 @@
       const color = avatarColor(posName || name);
       return `<div class="flex items-center gap-2 min-w-0"><div class="w-6 h-6 rounded-full ${color} flex items-center justify-center font-bold text-[10px] shrink-0">${escapeHtml(initials)}</div><span class="font-semibold text-slate-800 text-sm truncate min-w-0" title="${escapeHtml(name)}">${escapeHtml(name)}</span></div>`;
     } },
+    { key: 'watch',           label: 'Sled.',             default: false, sortVal: c => (c.watch ? 1 : 0), render: c => {
+      const active = !!c.watch;
+      const color = active ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400';
+      const title = active ? 'Zrušit sledování kandidáta' : 'Sledovat kandidáta';
+      return `<button type="button" class="watch-toggle" data-id="${c.id}" title="${title}">
+        <svg class="w-4 h-4 ${color}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.18 3.63a1 1 0 00.95.69h3.813c.969 0 1.371 1.24.588 1.81l-3.084 2.24a1 1 0 00-.364 1.118l1.18 3.63c.3.922-.755 1.688-1.54 1.118L10 13.347l-3.174 2.816c-.784.57-1.838-.196-1.539-1.118l1.18-3.63a1 1 0 00-.364-1.118L3.02 9.057c-.783-.57-.38-1.81.588-1.81h3.813a1 1 0 00.95-.69l1.18-3.63z" />
+        </svg>
+      </button>`;
+    }, interactive: true },
     { key: 'position',        label: 'Pozice',            default: true,  sortVal: c => { const p = positions.find(x => x.id === c.positionId); return (p ? p.name : '').toLowerCase(); }, render: c => { const p = positions.find(x => x.id === c.positionId); const v = p ? p.name : ''; return v ? `<span class="text-slate-600 text-[13px]">${escapeHtml(v)}</span>` : EMPTY; } },
     { key: 'stage',           label: 'Fáze',              default: true,  sortVal: c => (STAGE_LABELS[c.stage] || c.stage || '').toLowerCase(), render: c => renderStageSelect(c), interactive: true },
     { key: 'email',           label: 'E-mail',            default: false, sortVal: c => (c.email || '').toLowerCase(), render: c => {
@@ -272,6 +285,7 @@
   /** Max šířky sloupců (px) podle obsahu – vyrovnané zobrazení. */
   const COLUMN_MAX_WIDTH = {
     name: 220,
+    watch: 56,
     position: 150,
     stage: 130,
     email: 180,
@@ -324,7 +338,11 @@
     const links = document.querySelectorAll('.sidebar-link[data-view]');
     const views = document.querySelectorAll('.view');
     function showView(viewId) {
-      links.forEach(l => l.classList.toggle('active', l.dataset.view === viewId));
+      links.forEach(l => {
+        const isView = l.dataset.view === viewId;
+        const isWatch = l.dataset.watchOnly === '1';
+        l.classList.toggle('active', isView && (!!watchOnly === isWatch));
+      });
       views.forEach(v => {
         const active = v.id === viewId;
         v.classList.toggle('view-active', active);
@@ -342,12 +360,16 @@
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const viewId = link.dataset.view;
-        if (viewId) showView(viewId);
+        if (viewId) {
+          watchOnly = link.dataset.watchOnly === '1';
+          showView(viewId);
+        }
       });
     });
     const hash = (window.location.hash || '#dashboard').slice(1);
     const viewId = hash || 'dashboard';
     const hasView = document.getElementById(viewId);
+    watchOnly = false;
     showView(hasView ? viewId : 'dashboard');
     if (viewId === 'uzivatele' && hasView) renderUzivatele();
   }
@@ -768,10 +790,13 @@
     const posId = document.getElementById('filter-position').value;
     const openingId = document.getElementById('filter-opening').value;
     const stage = document.getElementById('filter-stage').value;
+    const showRejected = document.getElementById('filter-show-rejected') && document.getElementById('filter-show-rejected').checked;
     return candidates.filter(c => {
+      if (!showRejected && c.stage === 'zamitnut') return false;
       if (posId && c.positionId !== posId) return false;
       if (openingId && c.openingId !== openingId) return false;
       if (stage && c.stage !== stage) return false;
+      if (watchOnly && !c.watch) return false;
       if (search) {
         const text = [c.surname, c.firstname, c.email, c.phone, c.notes, c.source, c.prvniInterakce, c.kolo1, c.kolo2, c.kolo3, c.ukol, c.rejectionReason].filter(Boolean).join(' ').toLowerCase();
         if (!text.includes(search)) return false;
@@ -866,12 +891,53 @@
     return sortDirection === 'desc' ? sorted.reverse() : sorted;
   }
 
+  function renderCandidatesPagination(total, totalPages, currentPage) {
+    const infoEl = document.getElementById('candidates-pagination-info');
+    const btnsEl = document.getElementById('candidates-pagination-buttons');
+    if (!infoEl || !btnsEl) return;
+    const from = total === 0 ? 0 : (currentPage - 1) * CANDIDATES_PAGE_SIZE + 1;
+    const to = Math.min(currentPage * CANDIDATES_PAGE_SIZE, total);
+    infoEl.textContent = `Zobrazeno ${from}–${to} z ${total}`;
+    if (totalPages <= 1) {
+      btnsEl.innerHTML = '';
+      return;
+    }
+    const parts = [];
+    parts.push(`<button type="button" class="candidates-page-btn px-3 py-1.5 rounded-lg text-sm border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed" data-page="prev">‹ Předchozí</button>`);
+    const maxVisible = 7;
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1);
+    for (let i = start; i <= end; i++) {
+      const active = i === currentPage ? ' bg-indigo-100 border-indigo-300 text-indigo-700 font-medium' : ' border-slate-200 bg-white text-slate-600 hover:bg-slate-50';
+      parts.push(`<button type="button" class="candidates-page-btn px-2.5 py-1.5 rounded-lg text-sm border${active}" data-page="${i}">${i}</button>`);
+    }
+    parts.push(`<button type="button" class="candidates-page-btn px-3 py-1.5 rounded-lg text-sm border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed" data-page="next">Další ›</button>`);
+    btnsEl.innerHTML = parts.join('');
+    btnsEl.querySelectorAll('.candidates-page-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = btn.dataset.page;
+        if (p === 'prev') candidatesTablePage = Math.max(1, currentPage - 1);
+        else if (p === 'next') candidatesTablePage = Math.min(totalPages, currentPage + 1);
+        else candidatesTablePage = parseInt(p, 10);
+        renderCandidates();
+      });
+    });
+    btnsEl.querySelector('[data-page="prev"]').disabled = currentPage <= 1;
+    btnsEl.querySelector('[data-page="next"]').disabled = currentPage >= totalPages;
+  }
+
   function renderCandidates() {
     fillPositionSelect(document.getElementById('filter-position'));
     fillPositionSelect(document.getElementById('candidate-position'));
     fillStageFilter();
     fillOpeningFilter();
     const filtered = applySorting(filterCandidates());
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / CANDIDATES_PAGE_SIZE));
+    if (candidatesTablePage > totalPages) candidatesTablePage = 1;
+    const start = (candidatesTablePage - 1) * CANDIDATES_PAGE_SIZE;
+    const pageRows = filtered.slice(start, start + CANDIDATES_PAGE_SIZE);
     let visible = getVisibleColumns();
     let cols = ALL_COLUMNS.filter(c => visible.includes(c.key));
     if (cols.length <= 1) {
@@ -892,7 +958,7 @@
     });
 
     const tbody = document.getElementById('candidates-tbody');
-    tbody.innerHTML = filtered.map(c => {
+    tbody.innerHTML = pageRows.map(c => {
       const cells = cols.map(col => {
         const w = columnWidthStyle(col.key);
         return `<td class="${TW.td} align-top"${w}>${col.render(c)}</td>`;
@@ -934,6 +1000,19 @@
       });
     });
 
+    tbody.querySelectorAll('.watch-toggle').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const cid = btn.dataset.id;
+        const c = candidates.find(x => x.id === cid);
+        if (!c) return;
+        c.watch = !c.watch;
+        await saveCandidate(c);
+        renderCandidates();
+      });
+    });
+
+    renderCandidatesPagination(total, totalPages, candidatesTablePage);
     renderPipelineIfActive();
   }
 
@@ -1631,6 +1710,7 @@
     { value: 'kolo3', label: '3. kolo' },
     { value: 'ukol', label: 'Úkol' },
     { value: 'rejectionReason', label: 'Důvod odmítnutí' },
+    { value: 'watch', label: 'Sledovat' },
   ];
 
   /** Hlavičky pro šablonu XLS – sloupce používané v systému (bez Neimportovat a Kontakt smíšený). */
@@ -1660,6 +1740,7 @@
     if (h.startsWith('3.') || h.includes('3. kolo')) return 'kolo3';
     if (h.includes('úkol') || h.includes('ukol')) return 'ukol';
     if (h.includes('důvod odmítnutí') || h.includes('duvod odmitnuti') || h.includes('důvod zamítnutí')) return 'rejectionReason';
+    if (h.includes('sledovat')) return 'watch';
     return '';
   }
 
@@ -1754,7 +1835,7 @@
           surname: '', firstname: '', email_raw: '', phone_raw: '', contact_raw: '',
           linkedin: '', source: '', positionName: posNameFromSheet || '',
           stage_raw: '', salary: '', contract: '', prvniInterakce_raw: '',
-          notes: '', kolo1: '', kolo2: '', kolo3: '', ukol: '', rejectionReason: '',
+          notes: '', kolo1: '', kolo2: '', kolo3: '', ukol: '', rejectionReason: '', watch: '',
         };
         headers.forEach((h, idx) => {
           const key = (h || '').trim().toLowerCase();
@@ -1792,6 +1873,8 @@
         rawEmail = emails.join(', ');
         rawPhone = phones.join(', ');
         const stage = normalizeStageImport(raw.stage_raw);
+        const watchVal = (raw.watch || '').toString().toLowerCase();
+        const watch = watchVal === 'ano' || watchVal === '1' || watchVal === 'yes' || watchVal === 'x';
         all.push({
           surname: raw.surname, firstname: raw.firstname,
           email: rawEmail, phone: rawPhone,
@@ -1800,7 +1883,7 @@
           notes: raw.notes, kolo1: raw.kolo1, kolo2: raw.kolo2, kolo3: raw.kolo3,
           ukol: raw.ukol, rejectionReason: raw.rejectionReason,
           salary: raw.salary, contract: raw.contract,
-          positionName: raw.positionName || '', stage,
+          positionName: raw.positionName || '', stage, watch,
         });
       }
     }
@@ -1965,7 +2048,7 @@
     }).join('');
   }
 
-  async function runSmartImportWithConflicts() {
+  async function runSmartImportWithConflicts(onProgress) {
     if (!pendingImport) return;
     const { candidatesToImport, existingMap, conflicts } = pendingImport;
     pendingImport = null;
@@ -1979,15 +2062,16 @@
       });
     }
     const mergeFields = ['notes','email','phone','linkedin','source','salary','contract','prvniInterakce','kolo1','kolo2','kolo3','ukol','rejectionReason'];
+    const total = candidatesToImport.length;
     let updated = 0, added = 0;
     for (let i = 0; i < candidatesToImport.length; i++) {
+      if (onProgress) onProgress(i + 1, total, added);
       const seedC = candidatesToImport[i];
       seedC.positionId = resolvePositionId(seedC.positionName); delete seedC.positionName;
       const key = [seedC.surname, seedC.firstname].filter(Boolean).join('|').toLowerCase();
       if (!key) continue;
       const existing = existingMap.get(key);
       if (existing) {
-        // find conflict index for this pair
         const conflictIndex = conflicts.findIndex(c => c.incoming === seedC);
         const choice = conflictIndex >= 0 ? (choices[conflictIndex] || 'merge') : 'merge';
         if (choice === 'new') {
@@ -2010,6 +2094,7 @@
         added++;
       }
     }
+    if (onProgress) onProgress(total, total, added);
     await refreshAllViews();
     showImportLog([`Aktualizováno: ${updated} | Přidáno: ${added}`, `Celkem: ${(await getAllCandidates()).length}`]);
     parsedCandidates = [];
@@ -2030,31 +2115,139 @@
 
   document.getElementById('btn-import-merge').addEventListener('click', async () => {
     if (!parsedCandidates.length) return;
-    if (!confirm('Spustit chytrý import a aktualizovat kandidáty?')) return;
+    if (!confirm('Importovat všechny kandidáty z výběru?')) return;
+    const progressModal = document.getElementById('modal-import-progress');
+    const progressText = document.getElementById('import-progress-text');
     try {
+      progressText.textContent = 'Připravuji pozice…';
+      progressModal.classList.add('modal-open');
+      progressModal.setAttribute('aria-hidden', 'false');
       await ensurePositionsFromCandidates(parsedCandidates);
-      const existingCandidates = await getAllCandidates();
-      const existingMap = new Map();
-      existingCandidates.forEach(c => { const key = [c.surname, c.firstname].filter(Boolean).join('|').toLowerCase(); if (key) existingMap.set(key, c); });
-      const conflicts = [];
-      for (const seedC of parsedCandidates) {
-        const key = [seedC.surname, seedC.firstname].filter(Boolean).join('|').toLowerCase();
-        if (!key) continue;
-        const existing = existingMap.get(key);
-        if (existing) {
-          conflicts.push({ existing, incoming: seedC });
-        }
+      pendingImport = { candidatesToImport: parsedCandidates.slice(), existingMap: new Map(), conflicts: [] };
+      await runSmartImportWithConflicts((current, total, added) => {
+        progressText.textContent = `Importuji kandidáty… ${current} / ${total} (přidáno: ${added})`;
+      });
+    } catch (err) {
+      showImportLog([`Chyba: ${err.message || err}`]);
+    } finally {
+      progressModal.classList.remove('modal-open');
+      progressModal.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  document.getElementById('btn-remove-duplicates').addEventListener('click', async () => {
+    if (!confirm('Odstranit duplicity? U každého jména a příjmení zůstane jeden záznam (ten s nejvíce údaji), ostatní se smažou. Tuto akci nelze vrátit.')) return;
+    const progressModal = document.getElementById('modal-import-progress');
+    const progressText = document.getElementById('import-progress-text');
+    const dedupeLog = document.getElementById('dedupe-log');
+    try {
+      progressModal.classList.add('modal-open');
+      progressModal.setAttribute('aria-hidden', 'false');
+      progressText.textContent = 'Načítám kandidáty…';
+      const all = await getAllCandidates();
+      const key = c => [c.surname, c.firstname].map(s => (s || '').trim()).join('|').toLowerCase();
+      const filled = c => [c.positionId, c.email, c.phone, c.linkedin, c.source, c.notes, c.prvniInterakce].filter(Boolean).length;
+      const byName = new Map();
+      for (const c of all) {
+        const k = key(c);
+        if (!k) continue;
+        if (!byName.has(k)) byName.set(k, []);
+        byName.get(k).push(c);
       }
-      pendingImport = { candidatesToImport: parsedCandidates.slice(), existingMap, conflicts };
-      if (conflicts.length) {
-        renderImportConflicts(conflicts);
-        const modal = document.getElementById('modal-import-conflicts');
-        modal.classList.add('modal-open');
-        modal.setAttribute('aria-hidden', 'false');
-      } else {
-        await runSmartImportWithConflicts();
+      let deleted = 0;
+      const toDelete = [];
+      for (const [, group] of byName) {
+        if (group.length <= 1) continue;
+        group.sort((a, b) => filled(b) - filled(a));
+        for (let i = 1; i < group.length; i++) toDelete.push(group[i]);
       }
-    } catch (err) { showImportLog([`Chyba: ${err.message || err}`]); }
+      for (let i = 0; i < toDelete.length; i++) {
+        progressText.textContent = `Odstraňuji duplicity… ${i + 1} / ${toDelete.length}`;
+        await deleteCandidate(toDelete[i].id);
+        deleted++;
+      }
+      await refreshAllViews();
+      dedupeLog.hidden = false;
+      dedupeLog.textContent = deleted
+        ? `Odstraněno ${deleted} duplicit. Zůstalo ${(await getAllCandidates()).length} kandidátů.`
+        : 'Žádné duplicity nenalezeny (každé jméno a příjmení má jen jeden záznam).';
+    } catch (err) {
+      dedupeLog.hidden = false;
+      dedupeLog.textContent = 'Chyba: ' + (err.message || err);
+    } finally {
+      progressModal.classList.remove('modal-open');
+      progressModal.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  document.getElementById('btn-clear-all-candidates').addEventListener('click', () => {
+    getAllCandidates().then(async (list) => {
+      const count = list.length;
+      if (!count) {
+        document.getElementById('clear-all-log').hidden = false;
+        document.getElementById('clear-all-log').textContent = 'Databáze kandidátů je už prázdná.';
+        return;
+      }
+      const countEl = document.getElementById('clear-all-count');
+      if (countEl) countEl.textContent = count;
+      document.getElementById('clear-db-password').value = '';
+      document.getElementById('clear-db-password-error').classList.add('hidden');
+      document.getElementById('modal-clear-db-confirm').classList.add('modal-open');
+      document.getElementById('modal-clear-db-confirm').setAttribute('aria-hidden', 'false');
+    });
+  });
+
+  document.getElementById('btn-clear-db-confirm').addEventListener('click', async () => {
+    const passwordInput = document.getElementById('clear-db-password');
+    const errorEl = document.getElementById('clear-db-password-error');
+    const password = (passwordInput.value || '').trim();
+    if (!password) {
+      errorEl.textContent = 'Zadejte heslo.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    if (!currentUser || !currentUser.email || !supabaseClient) {
+      errorEl.textContent = 'Nejste přihlášeni.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    errorEl.classList.add('hidden');
+    try {
+      const { error } = await supabaseClient.auth.signInWithPassword({ email: currentUser.email, password });
+      if (error) {
+        errorEl.textContent = 'Špatné heslo. Zkuste to znovu.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+    } catch (e) {
+      errorEl.textContent = 'Chyba ověření: ' + (e.message || e);
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    const modal = document.getElementById('modal-clear-db-confirm');
+    modal.classList.remove('modal-open');
+    modal.setAttribute('aria-hidden', 'true');
+    const clearLog = document.getElementById('clear-all-log');
+    const count = (await getAllCandidates()).length;
+    try {
+      await clearAllCandidates();
+      await refreshAllViews();
+      clearLog.hidden = false;
+      clearLog.textContent = `Smazáno ${count} kandidátů. Databáze je vyčištěná, můžete naimportovat znovu.`;
+    } catch (err) {
+      clearLog.hidden = false;
+      clearLog.textContent = 'Chyba: ' + (err.message || err);
+    }
+  });
+
+  document.getElementById('clear-db-password').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btn-clear-db-confirm').click();
+  });
+  document.querySelectorAll('.clear-db-cancel, #modal-clear-db-confirm .modal-backdrop').forEach(el => {
+    el.addEventListener('click', () => {
+      document.getElementById('modal-clear-db-confirm').classList.remove('modal-open');
+      document.getElementById('modal-clear-db-confirm').setAttribute('aria-hidden', 'true');
+    });
   });
 
   // --- Modals ---
@@ -2102,6 +2295,7 @@
   });
 
   function refreshCandidatesView() {
+    candidatesTablePage = 1;
     renderCandidates();
     if (getCandidateViewMode() === 'pipeline') renderPipeline();
   }
@@ -2109,6 +2303,8 @@
   document.getElementById('filter-position').addEventListener('change', refreshCandidatesView);
   document.getElementById('filter-opening').addEventListener('change', refreshCandidatesView);
   document.getElementById('filter-stage').addEventListener('change', refreshCandidatesView);
+  const filterShowRejected = document.getElementById('filter-show-rejected');
+  if (filterShowRejected) filterShowRejected.addEventListener('change', refreshCandidatesView);
 
   document.getElementById('search-btn-run').addEventListener('click', () => {
     const list = filterCandidatesSearch();
