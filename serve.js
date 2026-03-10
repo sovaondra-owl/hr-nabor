@@ -3,10 +3,10 @@
  * Použití: node serve.js   → http://localhost:3000
  * Konfigurace Supabase z .env (config.js se generuje ze serveru).
  */
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const http = require('http');
 const fs = require('fs');
-const path = require('path');
 
 const PORT = parseInt(process.env.PORT, 10) || 3000;
 const MIMES = {
@@ -30,7 +30,10 @@ const server = http.createServer((req, res) => {
       'window.SUPABASE_URL = window.SUPABASE_URL || ' + JSON.stringify(process.env.SUPABASE_URL || '') + ';',
       'window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || ' + JSON.stringify(process.env.SUPABASE_ANON_KEY || '') + ';'
     ].join('\n');
-    res.writeHead(200, { 'Content-Type': 'application/javascript' });
+    res.writeHead(200, {
+      'Content-Type': 'application/javascript',
+      'Cache-Control': 'no-store, no-cache, must-revalidate'
+    });
     res.end(body);
     return;
   }
