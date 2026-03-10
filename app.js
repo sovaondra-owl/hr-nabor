@@ -1717,6 +1717,7 @@
         <div><dt class="text-xs font-medium text-slate-500 uppercase tracking-wider">LinkedIn</dt><dd class="mt-0.5">${linkedInHtml}</dd></div>
         <div><dt class="text-xs font-medium text-slate-500 uppercase tracking-wider">Pozice</dt><dd class="text-slate-800 mt-0.5">${escapeHtml(pos ? pos.name : (app.positionName || '—'))}</dd></div>
         <div><dt class="text-xs font-medium text-slate-500 uppercase tracking-wider">Datum</dt><dd class="text-slate-800 mt-0.5">${app.createdAt ? new Date(app.createdAt).toLocaleString('cs-CZ') : '—'}</dd></div>
+        ${app.startDate ? `<div><dt class="text-xs font-medium text-slate-500 uppercase tracking-wider">Datum nástupu</dt><dd class="text-slate-800 mt-0.5">${escapeHtml(formatStartDateDisplay(app.startDate))}</dd></div>` : ''}
         ${app.message ? `<div class="sm:col-span-2"><dt class="text-xs font-medium text-slate-500 uppercase tracking-wider">Zpráva</dt><dd class="text-slate-700 mt-0.5 break-words whitespace-pre-wrap">${escapeHtml(app.message)}</dd></div>` : ''}
         <div class="sm:col-span-2"><dt class="text-xs font-medium text-slate-500 uppercase tracking-wider">Soubory</dt><dd class="mt-0.5 space-y-0.5">${filesHtml}</dd></div>
       </div>`;
@@ -1749,12 +1750,17 @@
     const app = applications.find(a => a.id === currentApplicationId);
     if (!app || app.convertedToCandidateId) return;
     const posId = app.positionId || (positions[0] ? positions[0].id : null);
+    const cvFiles = Array.isArray(app.files) && app.files.length
+      ? app.files.map(f => ({ name: f.name || 'CV.pdf', data: f.data }))
+      : undefined;
     const candidate = await saveCandidate({
       surname: app.surname || '', firstname: app.firstname || '', email: app.email || '',
       phone: app.phone || '', linkedin: app.linkedin || '', positionId: posId,
       openingId: app.openingId || null,
+      startDate: app.startDate || '',
       stage: targetStage, source: 'Job stránka',
-      notes: 'Přihláška z webu' + (app.message ? '\n\n' + app.message : '')
+      notes: 'Přihláška z webu' + (app.message ? '\n\n' + app.message : ''),
+      cvFiles
     });
     app.convertedToCandidateId = candidate.id;
     await saveApplication(app); await loadApplications(); await loadCandidates();

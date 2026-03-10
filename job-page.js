@@ -7,6 +7,8 @@
   const applicationPositionIdEl = document.getElementById('application-position-id');
   const applicationOpeningIdEl = document.getElementById('application-opening-id');
   const form = document.getElementById('application-form');
+  const MIN_SUBMIT_SECONDS = 15;
+  let formShownAt = 0;
 
   async function loadOpeningsPublic() {
     await openDB();
@@ -30,12 +32,14 @@
       positionsSection.hidden = true;
       successSection.hidden = true;
       applySection.hidden = false;
+      formShownAt = Date.now();
       applyPositionNameEl.textContent = opening.title || (pos ? pos.name : '');
       applicationPositionIdEl.value = opening.positionId || '';
       applicationOpeningIdEl.value = opening.id;
       form.reset();
       applicationPositionIdEl.value = opening.positionId || '';
       applicationOpeningIdEl.value = opening.id;
+      updateDropzoneLabels();
       return;
     }
 
@@ -64,6 +68,7 @@
     positionsSection.hidden = true;
     successSection.hidden = true;
     applySection.hidden = false;
+    formShownAt = Date.now();
     applyPositionNameEl.textContent = positionName;
     applicationPositionIdEl.value = positionId || '';
     applicationOpeningIdEl.value = openingId || '';
@@ -79,7 +84,7 @@
     positionsSection.hidden = false;
   });
 
-  const DROPZONE_DEFAULTS = { 'app-cv': 'Klikněte nebo přetáhněte soubor', 'app-files-extra': 'Přidat certifikát / portfolio' };
+  const DROPZONE_DEFAULTS = { 'app-cv': 'Klikněte nebo přetáhněte soubor' };
   function updateDropzoneLabels() {
     document.querySelectorAll('.job-dropzone').forEach(zone => {
       const forId = zone.getAttribute('data-for');
@@ -139,6 +144,18 @@
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const gdprCheck = document.getElementById('app-gdpr-consent');
+    if (!gdprCheck || !gdprCheck.checked) {
+      alert('Pro odeslání přihlášky je nutné souhlasit se zpracováním osobních údajů.');
+      return;
+    }
+    const elapsed = formShownAt ? Date.now() - formShownAt : 0;
+    const minMs = MIN_SUBMIT_SECONDS * 1000;
+    if (formShownAt && elapsed < minMs) {
+      const left = Math.ceil((minMs - elapsed) / 1000);
+      alert('Prosím vyplňte formulář důkladně. Odeslat jej můžete za ' + left + ' sekund.');
+      return;
+    }
     const linkedin = (document.getElementById('app-linkedin').value || '').trim();
     const cvInput = document.getElementById('app-cv');
     const hasCv = cvInput.files && cvInput.files[0];
@@ -148,17 +165,13 @@
     }
 
     const positionId = applicationPositionIdEl.value;
-    const extraInput = document.getElementById('app-files-extra');
-
     const files = [];
     if (cvInput.files && cvInput.files[0]) {
       files.push(await readFileAsBase64(cvInput.files[0]));
     }
-    if (extraInput.files) {
-      for (let i = 0; i < extraInput.files.length; i++) {
-        files.push(await readFileAsBase64(extraInput.files[i]));
-      }
-    }
+
+    const startDateEl = document.getElementById('app-start-date');
+    const startDate = startDateEl && startDateEl.value ? startDateEl.value.trim() : '';
 
     const application = {
       positionId,
@@ -168,6 +181,7 @@
       email: document.getElementById('app-email').value.trim(),
       phone: document.getElementById('app-phone').value.trim(),
       linkedin: document.getElementById('app-linkedin').value.trim(),
+      startDate: startDate || null,
       message: document.getElementById('app-message').value.trim(),
       files
     };

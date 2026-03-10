@@ -190,12 +190,15 @@ CREATE TABLE IF NOT EXISTS applications (
   email TEXT,
   phone TEXT,
   linkedin TEXT,
+  start_date TEXT,
   position_name TEXT,
   message TEXT,
   files JSONB,
   converted_to_candidate_id UUID,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS start_date TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_applications_opening_id ON applications(opening_id);
 CREATE INDEX IF NOT EXISTS idx_applications_created_at ON applications(created_at);
